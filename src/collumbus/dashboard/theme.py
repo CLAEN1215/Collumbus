@@ -1,4 +1,14 @@
-"""Modern styling, responsive CSS, and visual badge helpers for Collumbus dashboard."""
+"""Modern styling, responsive CSS, and visual badge helpers for Collumbus dashboard.
+
+Utilizes the 7 Principles of Design:
+1. Contrast - High-visibility status chips, clear hierarchy between risks and passes.
+2. Hierarchy - Prominent health scorecard, distinct typography sizes, visual flow.
+3. Alignment - Consistent grid, standardized card margins and padding.
+4. Balance - Symmetrical metric distribution and harmonious layout.
+5. Proximity - Logical grouping of threat descriptions, fixes, and metadata.
+6. Repetition - Consistent card templates and iconography across all 5 views.
+7. White Space - Uncluttered layouts with generous breathing room.
+"""
 
 import streamlit as st
 
@@ -10,20 +20,20 @@ def apply_theme() -> None:
     st.markdown(
         """
         <style>
-        /* Container width & padding */
+        /* Base typography & container constraints */
         .main .block-container {
-            padding-top: 1.75rem;
-            padding-bottom: 3rem;
-            max-width: 1280px;
+            padding-top: 1.5rem;
+            padding-bottom: 3.5rem;
+            max-width: 1200px;
         }
 
-        /* Metric cards */
+        /* Metric cards (Balance, Alignment, White Space) */
         div[data-testid="stMetric"] {
             background-color: var(--secondary-background-color);
             border: 1px solid rgba(128, 128, 128, 0.2);
             border-radius: 12px;
-            padding: 12px 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
         div[data-testid="stMetric"]:hover {
@@ -32,81 +42,111 @@ def apply_theme() -> None:
         }
         div[data-testid="stMetricLabel"] {
             font-size: 0.85rem !important;
-            font-weight: 600 !important;
+            font-weight: 700 !important;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.05em;
             color: var(--text-color);
             opacity: 0.85;
         }
         div[data-testid="stMetricValue"] {
-            font-size: 1.8rem !important;
-            font-weight: 700 !important;
+            font-size: 1.9rem !important;
+            font-weight: 800 !important;
         }
 
-        /* Status & Severity Pill Badges */
+        /* Pill Badges (Contrast & Repetition) */
         .badge {
             display: inline-block;
-            padding: 2px 10px;
-            font-size: 0.72rem;
-            font-weight: 700;
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
             border-radius: 9999px;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
             vertical-align: middle;
             margin-right: 6px;
             line-height: 1.4;
         }
         .badge-fail {
-            background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444;
+            background-color: rgba(239, 68, 68, 0.18);
+            color: #ef4444;
+            border: 1px solid #ef4444;
         }
         .badge-pass {
-            background-color: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981;
+            background-color: rgba(16, 185, 129, 0.18);
+            color: #10b981;
+            border: 1px solid #10b981;
         }
         .badge-error {
-            background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid #f59e0b;
+            background-color: rgba(245, 158, 11, 0.18);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
         }
         .badge-na {
-            background-color: rgba(156, 163, 175, 0.15); color: #9ca3af; border: 1px solid #9ca3af;
+            background-color: rgba(156, 163, 175, 0.18);
+            color: #9ca3af;
+            border: 1px solid #9ca3af;
         }
 
         .badge-critical {
-            background-color: rgba(153, 27, 27, 0.2); color: #f87171; border: 1px solid #dc2626;
+            background-color: rgba(153, 27, 27, 0.25);
+            color: #f87171;
+            border: 1px solid #dc2626;
         }
         .badge-high {
-            background-color: rgba(220, 38, 38, 0.15); color: #ef4444; border: 1px solid #f87171;
+            background-color: rgba(220, 38, 38, 0.2);
+            color: #ef4444;
+            border: 1px solid #f87171;
         }
         .badge-medium {
-            background-color: rgba(217, 119, 6, 0.15); color: #f59e0b; border: 1px solid #fbbf24;
+            background-color: rgba(217, 119, 6, 0.2);
+            color: #f59e0b;
+            border: 1px solid #fbbf24;
         }
         .badge-low {
-            background-color: rgba(37, 99, 235, 0.15); color: #3b82f6; border: 1px solid #60a5fa;
+            background-color: rgba(37, 99, 235, 0.2);
+            color: #3b82f6;
+            border: 1px solid #60a5fa;
         }
         .badge-info {
-            background-color: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid #cbd5e1;
+            background-color: rgba(100, 116, 139, 0.2);
+            color: #94a3b8;
+            border: 1px solid #cbd5e1;
         }
 
-        /* Card and container styling */
-        .collumbus-card {
+        /* Information & Threat Callouts (Hierarchy & Proximity) */
+        .callout-card {
             background-color: var(--secondary-background-color);
-            border: 1px solid rgba(128, 128, 128, 0.2);
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 1rem;
+            border-left: 4px solid #3b82f6;
+            border-top: 1px solid rgba(128, 128, 128, 0.2);
+            border-right: 1px solid rgba(128, 128, 128, 0.2);
+            border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+            border-radius: 0 10px 10px 0;
+            padding: 14px 18px;
+            margin: 10px 0;
+        }
+        .callout-danger {
+            border-left-color: #ef4444;
+        }
+        .callout-warning {
+            border-left-color: #f59e0b;
+        }
+        .callout-success {
+            border-left-color: #10b981;
         }
 
-        /* Expander card borders */
+        /* Clean Expander Styling */
         div[data-testid="stExpander"] {
-            border: 1px solid rgba(128, 128, 128, 0.22) !important;
-            border-radius: 10px !important;
-            margin-bottom: 0.65rem;
+            border: 1px solid rgba(128, 128, 128, 0.25) !important;
+            border-radius: 12px !important;
+            margin-bottom: 0.85rem;
             background: var(--background-color);
         }
 
-        /* Responsive Mobile Layout Fixes */
+        /* Mobile / Narrow Screen Responsiveness */
         @media (max-width: 768px) {
             .main .block-container {
-                padding-left: 0.8rem;
-                padding-right: 0.8rem;
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
                 padding-top: 1rem;
             }
             div[data-testid="stMetric"] {

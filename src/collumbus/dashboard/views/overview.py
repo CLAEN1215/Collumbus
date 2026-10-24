@@ -1,4 +1,14 @@
-"""Overview page: executive audit summary and posture metrics."""
+"""Overview page: executive audit summary and posture metrics.
+
+Built using the 7 Principles of Design:
+1. Contrast - High-visibility status chips, clear differentiation between risks and passes.
+2. Hierarchy - Prominent health scorecard, distinct typography sizes, natural visual flow.
+3. Alignment - Consistent grid, standardized card margins and padding.
+4. Balance - Symmetrical metric distribution and harmonious layout.
+5. Proximity - Logical grouping of threat descriptions, fixes, and metadata.
+6. Repetition - Consistent card templates and iconography across views.
+7. White Space - Uncluttered layouts with generous breathing room.
+"""
 
 from collections import Counter
 
@@ -18,90 +28,106 @@ def render_overview() -> None:
     apply_theme()
     scan = get_active_scan()
 
-    st.title("🧭 Executive Audit Overview")
-    st.caption("High-level security posture, compliance indicators, and priority action items.")
+    st.title("🧭 Cloud Security Posture Overview")
+    st.caption("Executive audit summary, compliance health score, and prioritized action items.")
 
     if scan.source == Source.DEMO:
         st.info(
-            "ℹ️ **Simulated Data**: Displaying fictional demo resources, not a live AWS account. "
-            "Run `python -m collumbus aws-scan` to audit real cloud infrastructure."
+            "ℹ️ **Simulated Audit Environment**: Displaying demo cloud resources "
+            "for safe evaluation. To audit a live AWS account, run `python -m collumbus aws-scan`."
         )
 
-    # Top metadata row
-    col_meta1, col_meta2, col_meta3, col_meta4 = st.columns(4)
-    with col_meta1:
-        st.metric("Account ID", scan.account_id)
-    with col_meta2:
-        st.metric("Regions", ", ".join(scan.regions))
-    with col_meta3:
-        st.metric("Scan Time (UTC)", scan.started_at.strftime("%Y-%m-%d %H:%M"))
-    with col_meta4:
-        st.metric("Scan ID", f"{scan.scan_id[:8]}...")
-
-    # Completion status banner
-    if scan.is_complete:
-        st.success(
-            "✅ **Audit Complete**: All requested categories and regions were fully inspected."
-        )
-    else:
-        gap_count = len(scan.coverage.gaps)
-        err_count = sum(1 for f in scan.findings if f.status == Status.ERROR)
-        st.warning(
-            f"⚠️ **Audit Incomplete**: {gap_count} coverage gap(s) and {err_count} rule error(s) "
-            "detected. Unchecked areas are **NOT** passes."
-        )
-
-    st.divider()
-
-    # Core Metric Counters
+    # 1. Executive Status & Posture Score (Hierarchy & Contrast)
     status_counts = Counter(f.status for f in scan.findings)
     fails = status_counts.get(Status.FAIL, 0)
     errors = status_counts.get(Status.ERROR, 0)
     passes = status_counts.get(Status.PASS, 0)
+    total_findings = len(scan.findings) or 1
+    compliance_score = int((passes / total_findings) * 100)
 
+    if scan.is_complete and fails == 0:
+        st.success(
+            f"🛡️ **Security Status: Excellent ({compliance_score}% Compliance)** — "
+            "All cloud checks passed with zero policy violations."
+        )
+    elif fails > 0:
+        st.error(
+            f"🚨 **Security Status: Attention Required ({compliance_score}% Compliance)** — "
+            f"Detected {fails} failing security check(s) and {errors} visibility gap(s)."
+        )
+    else:
+        st.warning(
+            f"⚠️ **Security Status: Visibility Incomplete ({compliance_score}% Compliance)** — "
+            f"{errors} check(s) could not be verified due to missing IAM permissions."
+        )
+
+    # 2. Key Metrics Row (Balance & Alignment)
     m1, m2, m3, m4, m5 = st.columns(5)
     with m1:
-        st.metric("Resources Checked", scan.coverage.resources_inspected)
+        st.metric("Total Inspected", scan.coverage.resources_inspected)
     with m2:
         st.metric("Total Findings", len(scan.findings))
     with m3:
-        st.metric("Failures", fails, delta=f"-{fails}" if fails else "0", delta_color="inverse")
+        st.metric(
+            "Security Failures",
+            fails,
+            delta=f"-{fails}" if fails else "0",
+            delta_color="inverse",
+        )
     with m4:
         st.metric(
-            "Errors / Gaps",
+            "Visibility Gaps",
             errors,
-            delta=f"{errors} uninspected" if errors else "0",
+            delta=f"{errors} unverified" if errors else "0",
             delta_color="off",
         )
     with m5:
-        st.metric("Passes", passes)
+        st.metric(
+            "Passing Controls",
+            passes,
+            delta=f"+{passes}" if passes else "0",
+            delta_color="normal",
+        )
 
-    st.divider()
-
-    # Visual Posture Meter
-    st.subheader("Security Posture Breakdown")
-    total_findings = len(scan.findings) or 1
+    # 3. Posture Proportion Meter (Contrast & Visual Flow)
     fail_pct = (fails / total_findings) * 100
     err_pct = (errors / total_findings) * 100
     pass_pct = (passes / total_findings) * 100
 
     meter_html = (
         f'<div style="display: flex; height: 16px; border-radius: 9999px; '
-        f'overflow: hidden; margin: 10px 0 16px 0; background: #e2e8f0;">'
+        f'overflow: hidden; margin: 12px 0 20px 0; background: #e2e8f0;">'
         f'<div style="width: {fail_pct:.1f}%; background-color: #ef4444;" '
         f'title="Failures: {fails}"></div>'
         f'<div style="width: {err_pct:.1f}%; background-color: #f59e0b;" '
-        f'title="Errors: {errors}"></div>'
+        f'title="Gaps: {errors}"></div>'
         f'<div style="width: {pass_pct:.1f}%; background-color: #10b981;" '
         f'title="Passes: {passes}"></div>'
         f"</div>"
     )
     st.markdown(meter_html, unsafe_allow_html=True)
 
+    # 4. Target Environment Metadata (Proximity & White Space)
+    with st.container(border=True):
+        st.markdown("#### 🎯 Target Audit Scope")
+        meta1, meta2, meta3, meta4 = st.columns(4)
+        with meta1:
+            st.metric("Target Account", scan.account_id)
+        with meta2:
+            st.metric("Regions Audited", len(scan.regions), help=", ".join(scan.regions))
+        with meta3:
+            st.metric("Scan Time (UTC)", scan.started_at.strftime("%H:%M:%S"))
+        with meta4:
+            st.metric("Audit ID", f"{scan.scan_id[:8]}...")
+
+    st.divider()
+
+    # 5. Visual Posture Charts (Balance & Alignment)
+    st.subheader("📊 Posture Distribution Breakdown")
     chart_col1, chart_col2 = st.columns(2)
 
     with chart_col1:
-        st.markdown("**Findings by Verdict**")
+        st.markdown("**Checks by Security Verdict**")
         status_df = pd.DataFrame(
             [
                 {"Verdict": s.value, "Count": status_counts.get(s, 0)}
@@ -115,7 +141,7 @@ def render_overview() -> None:
             st.write("No findings to display.")
 
     with chart_col2:
-        st.markdown("**Failing Issues by Severity**")
+        st.markdown("**Failing Checks by Severity**")
         fail_findings = [f for f in scan.findings if f.status == Status.FAIL]
         sev_counts = Counter(f.severity for f in fail_findings)
         sev_df = pd.DataFrame(
@@ -128,12 +154,16 @@ def render_overview() -> None:
         if not sev_df.empty:
             st.bar_chart(sev_df, x="Severity", y="Count", color="#f59e0b")
         else:
-            st.success("No failing findings in this scan!")
+            st.success("🎉 No policy failures detected in this audit!")
 
     st.divider()
 
-    # Urgent Action Items Callout
-    st.subheader("Priority Action Items")
+    # 6. Priority Action Items (Proximity, Contrast & Progressive Disclosure)
+    st.subheader("⚡ Top Priority Action Items")
+    st.caption(
+        "Address these high-severity findings first to immediately improve your cloud posture."
+    )
+
     urgent = [
         f
         for f in scan.findings
@@ -141,12 +171,22 @@ def render_overview() -> None:
     ]
     if urgent:
         for f in urgent[:5]:
-            with st.expander(f"🔴 [{f.severity.value}] {f.rule_id} — {f.resource_id} ({f.region})"):
+            with st.container(border=True):
+                col_h1, col_h2 = st.columns([3, 1])
+                with col_h1:
+                    st.markdown(f"### 🔴 {f.title}")
+                    st.caption(
+                        f"**Resource:** `{f.resource_id}` &nbsp; | &nbsp; **Region:** `{f.region}`"
+                    )
+                with col_h2:
+                    st.caption(f"**Rule:** `{f.rule_id}`")
+                    st.caption(f"**Severity:** `{f.severity.value}`")
+
                 st.markdown(f"**Issue Description:** {f.summary}")
                 if f.risk:
-                    st.markdown(f"**🚨 Security Risk:** {f.risk}")
+                    st.info(f"**🚨 Real-World Threat:** {f.risk}")
                 if f.remediation:
-                    st.markdown("**🛠️ Recommended Fix:**")
+                    st.markdown("**🛠️ Recommended Fix Command:**")
                     st.code(f.remediation, language="text")
     else:
-        st.success("No High or Critical failures detected.")
+        st.success("🎉 Zero High or Critical failures detected.")
