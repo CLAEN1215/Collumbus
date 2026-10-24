@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy source code and configuration
 COPY src/ ./src/
 COPY config/ ./config/
+COPY assets/ ./assets/
 COPY app.py ./
 
 # Create a non-root user for security hardening

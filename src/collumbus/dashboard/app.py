@@ -1,5 +1,7 @@
 """Main entry point for the Collumbus Streamlit web dashboard."""
 
+from pathlib import Path
+
 import streamlit as st
 
 from collumbus.dashboard.state import get_active_scan, run_and_save_demo_scan
@@ -13,10 +15,12 @@ from collumbus.dashboard.views import (
 )
 from collumbus.models import Source
 
+LOGO_PATH = Path(__file__).parent / "assets" / "logo.png"
+
 
 def main() -> None:
     st.set_page_config(
-        page_title="Collumbus — Cloud Configuration Auditor",
+        page_title="Columbus — Cloud Security Auditor",
         page_icon="🧭",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -27,8 +31,11 @@ def main() -> None:
 
     # Sidebar Branding and Quick Actions
     with st.sidebar:
-        st.markdown("## 🧭 **Collumbus**")
-        st.caption("Read-only AWS Configuration Auditor")
+        if LOGO_PATH.exists():
+            st.image(str(LOGO_PATH), use_container_width=True)
+        else:
+            st.markdown("## 🧭 **Columbus**")
+            st.caption("Read-only AWS Configuration Auditor")
 
         scan = get_active_scan()
 
@@ -53,7 +60,7 @@ def main() -> None:
             st.rerun()
 
         st.divider()
-        st.caption("Collumbus Portfolio Project — Lance (BSIT)")
+        st.caption("Columbus Portfolio Project — Lance (BSIT)")
 
     # Define the 5 Pages
     pages = [

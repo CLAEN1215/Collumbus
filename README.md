@@ -1,10 +1,10 @@
-# Collumbus
+<p align="center">
+  <img src="assets/logo.png" alt="Columbus - Cloud Security Auditor" width="700"/>
+</p>
 
-A beginner-friendly, **read-only** AWS cloud configuration auditor written in Python.
-
-# Collumbus
-
-A beginner-friendly, **read-only** AWS cloud configuration auditor written in Python.
+<p align="center">
+  <strong>A beginner-friendly, read-only AWS cloud configuration auditor written in Python.</strong>
+</p>
 
 > **Status: Complete (Phase 7 of 7).** Core audit foundation, demo scanner, security rules,
 > JSON/CSV reporting, 5-page Streamlit web dashboard, read-only AWS boto3 collector, static
