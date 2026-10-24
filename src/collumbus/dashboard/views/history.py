@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from collumbus.dashboard.state import (
     get_active_scan,
     get_history,
+    run_and_save_aws_scan,
     run_and_save_demo_scan,
     set_active_scan,
 )
@@ -45,11 +46,22 @@ def render_history() -> None:
                 "Execute a fresh configuration audit against the active scope.</div>",
                 unsafe_allow_html=True,
             )
-            if st.button("Run Fresh Scan", type="primary", use_container_width=True):
-                with st.spinner("Executing audit..."):
-                    new_scan = run_and_save_demo_scan()
-                st.success(f"Executed and saved scan `{new_scan.scan_id[:8]}`!")
-                st.rerun()
+            col_t1, col_t2 = st.columns(2)
+            with col_t1:
+                if st.button("Live AWS Scan", type="primary", use_container_width=True):
+                    try:
+                        with st.spinner("Connecting to AWS and auditing..."):
+                            new_scan = run_and_save_aws_scan()
+                        st.success(f"Audited AWS Account `{new_scan.account_id}`!")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"AWS Error: {exc}")
+            with col_t2:
+                if st.button("Demo Scan", use_container_width=True):
+                    with st.spinner("Executing simulated audit..."):
+                        new_scan = run_and_save_demo_scan()
+                    st.success(f"Executed and saved scan `{new_scan.scan_id[:8]}`!")
+                    st.rerun()
 
     with act_col2:
         with st.container(border=True):

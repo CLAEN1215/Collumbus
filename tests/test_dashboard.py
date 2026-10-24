@@ -9,6 +9,7 @@ from collumbus.dashboard import APP_PATH
 from collumbus.dashboard.state import (
     get_active_scan,
     get_history,
+    run_and_save_aws_scan,
     run_and_save_demo_scan,
     set_active_scan,
 )
@@ -140,3 +141,11 @@ def test_render_history_execution(clean_state, mock_scan, tmp_path):
         patch("streamlit.selectbox", side_effect=[scan2.scan_id, mock_scan.scan_id]),
     ):
         render_history()
+
+
+def test_run_and_save_aws_scan(clean_state, mock_scan, tmp_path):
+    with patch("collumbus.dashboard.state.run_scan", return_value=mock_scan):
+        scan = run_and_save_aws_scan(regions=["us-east-1"], history_dir=tmp_path)
+        assert isinstance(scan, Scan)
+        assert len(get_history(tmp_path)) == 1
+        assert st.session_state["active_scan"].scan_id == scan.scan_id

@@ -5,7 +5,11 @@ from pathlib import Path
 import streamlit as st
 from PIL import Image
 
-from collumbus.dashboard.state import get_active_scan, run_and_save_demo_scan
+from collumbus.dashboard.state import (
+    get_active_scan,
+    run_and_save_aws_scan,
+    run_and_save_demo_scan,
+)
 from collumbus.dashboard.theme import apply_theme, render_header
 from collumbus.dashboard.views import (
     render_coverage,
@@ -62,7 +66,7 @@ def main() -> None:
 
         st.write("")
 
-        # Cloud Mode Promo Card
+        # Cloud Mode Card
         promo_html = """
         <div class="sidebar-promo-card">
             <div class="sidebar-promo-title">⚡ AWS Cloud Mode</div>
@@ -73,11 +77,22 @@ def main() -> None:
         """
         st.markdown(promo_html, unsafe_allow_html=True)
 
-        if st.button("🚀 Run New Scan", use_container_width=True, type="primary"):
-            with st.spinner("Executing simulated audit..."):
-                new_scan = run_and_save_demo_scan()
-            st.success(f"Executed fresh scan `{new_scan.scan_id[:8]}`!")
-            st.rerun()
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            if st.button("Live AWS", use_container_width=True, type="primary"):
+                try:
+                    with st.spinner("Connecting to AWS (read-only)..."):
+                        aws_scan = run_and_save_aws_scan()
+                    st.success(f"Audited AWS Account `{aws_scan.account_id}`!")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"AWS Audit Error: {exc}")
+        with col_b2:
+            if st.button("Demo", use_container_width=True):
+                with st.spinner("Executing simulated audit..."):
+                    demo_scan = run_and_save_demo_scan()
+                st.success(f"Executed demo scan `{demo_scan.scan_id[:8]}`!")
+                st.rerun()
 
         st.divider()
         st.caption("Columbus v0.1.0 &bull; Read-Only Cloud Security Auditor")
