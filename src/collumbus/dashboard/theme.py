@@ -37,9 +37,32 @@ def apply_theme() -> None:
         /* Import Google JetBrains Mono */
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
-        /* Universal Monospace Typography */
-        html, body, [class*="css"], .stMarkdown, p, span, label, div,
-        input, select, textarea, button, code, pre, table, th, td {
+        /* CRITICAL: Protect Material Symbols & Streamlit icon fonts from font-family override */
+        [data-testid="stIconMaterial"],
+        .material-symbols-rounded,
+        .material-symbols-outlined,
+        [class*="material-symbols"],
+        button[data-testid="stSidebarCollapseButton"] *,
+        [data-testid="stSidebarCollapseButton"] span,
+        [data-testid="stSidebarCollapseButton"] button,
+        [data-testid="stExpandSidebar"] *,
+        [data-testid="stIcon"] {
+            font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
+            font-style: normal;
+            font-variant: normal;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+
+        /* Monospace Typography for Content (excludes icon glyphs) */
+        html, body, .stMarkdown, p, label,
+        div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"],
+        div[data-testid="stMetricDelta"],
+        h1, h2, h3, h4, h5, h6,
+        input, select, textarea, code, pre, table, th, td {
             font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
             font-feature-settings: "zero" 1, "liga" 1;
         }
@@ -68,12 +91,6 @@ def apply_theme() -> None:
             align-items: center;
             gap: 10px;
         }
-        .nocturn-brand-name {
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: #ffffff;
-            letter-spacing: 0.02em;
-        }
         .nocturn-search-pill {
             background: #161726;
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -91,29 +108,32 @@ def apply_theme() -> None:
             align-items: center;
             gap: 10px;
         }
-        .nocturn-user-pill {
-            display: flex;
+        .nocturn-status-pill {
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: #161726;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
             border-radius: 9999px;
-            padding: 4px 12px 4px 4px;
-            font-size: 0.76rem;
-            color: #e4e4e7;
-            font-weight: 600;
+            padding: 4px 12px;
+            font-size: 0.72rem;
+            color: #c084fc;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
         }
-        .nocturn-user-avatar {
-            width: 22px;
-            height: 22px;
+        .pulse-indicator {
+            width: 7px;
+            height: 7px;
+            background-color: #8b5cf6;
             border-radius: 50%;
-            background: #3f3f46;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.65rem;
-            font-weight: 800;
-            color: #ffffff;
+            box-shadow: 0 0 8px #8b5cf6;
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+            0% { transform: scale(0.9); opacity: 0.7; box-shadow: 0 0 4px #8b5cf6; }
+            50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 10px #8b5cf6; }
+            100% { transform: scale(0.9); opacity: 0.7; box-shadow: 0 0 4px #8b5cf6; }
         }
 
         /* Metric Cards (Nocturn Rounded Dark Card) */
@@ -178,7 +198,6 @@ def apply_theme() -> None:
         div[data-testid="stAlert"] * {
             color: #e4e4e7 !important;
         }
-        /* Color-accented left borders */
         div[data-testid="stAlert"]:has(svg[data-testid="stIconInfo"]) {
             border-left: 3px solid #8b5cf6 !important;
         }
@@ -386,9 +405,9 @@ def render_header() -> None:
             <span>Search findings, rules, resources...</span>
         </div>
         <div class="nocturn-actions-group">
-            <div class="nocturn-user-pill">
-                <div class="nocturn-user-avatar">LM</div>
-                <span>Lance (Auditor)</span>
+            <div class="nocturn-status-pill">
+                <span class="pulse-indicator"></span>
+                <span>AUDIT ENGINE // READ-ONLY</span>
             </div>
         </div>
     </div>

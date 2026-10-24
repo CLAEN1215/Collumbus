@@ -18,12 +18,12 @@ from collumbus.models import Source
 
 BRAND_DIR = Path(__file__).parent / "assets" / "brand"
 FAVICON_PATH = BRAND_DIR / "favicon.png"
-LOGO_STACKED_PATH = BRAND_DIR / "logo_stacked.png"
 LOGO_HORIZONTAL_PATH = BRAND_DIR / "logo_horizontal.png"
-LOGO_PATH = Path(__file__).parent / "assets" / "logo.png"
+LOGO_COMPACT_PATH = BRAND_DIR / "logo_compact.png"
 
 
 def main() -> None:
+    # 1. Official Browser Tab Favicon
     page_icon_obj = Image.open(FAVICON_PATH) if FAVICON_PATH.exists() else "🧭"
 
     st.set_page_config(
@@ -33,39 +33,17 @@ def main() -> None:
         initial_sidebar_state="expanded",
     )
 
-    # Apply Nocturn SaaS styling
+    # 2. Official Sidebar Logo (renders at top of sidebar above navigation)
+    if LOGO_HORIZONTAL_PATH.exists():
+        st.logo(str(LOGO_HORIZONTAL_PATH), icon_image=str(FAVICON_PATH))
+
+    # 3. Apply Nocturn SaaS styling
     apply_theme()
 
-    # Sidebar Branding (Nocturn Style)
+    # 4. Sidebar Content (Scope, Mode & Actions — Zero mock user)
     with st.sidebar:
-        # 1. Official Vertical / Primary Block Logo (Stacked)
-        if LOGO_STACKED_PATH.exists():
-            st.image(str(LOGO_STACKED_PATH), use_container_width=True)
-        elif LOGO_PATH.exists():
-            st.image(str(LOGO_PATH), use_container_width=True)
-
-        st.write("")
-
-        # 2. Auditor Profile Card
-        profile_html = """
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem;">
-            <div style="width: 36px; height: 36px; border-radius: 50%;
-                 background: linear-gradient(135deg, #7c3aed 0%, #38bdf8 100%);
-                 display: flex; align-items: center; justify-content: center;
-                 font-weight: 800; font-size: 0.85rem; color: #ffffff;">LM</div>
-            <div>
-                <div style="font-weight: 700; font-size: 0.92rem; color: #ffffff;">
-                    Lance (BSIT)
-                </div>
-                <div style="font-size: 0.72rem; color: #8e90a6;">auditor@columbus.sec</div>
-            </div>
-        </div>
-        """
-        st.markdown(profile_html, unsafe_allow_html=True)
-
         scan = get_active_scan()
 
-        # Workspaces section (like in Nocturn)
         st.markdown(
             "<div style='font-size: 0.75rem; font-weight: 700; color: #71717a; "
             "letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px;'>"
@@ -84,7 +62,7 @@ def main() -> None:
 
         st.write("")
 
-        # Cloud Mode Promo Card (like "Upgrade to Growth" in Nocturn)
+        # Cloud Mode Promo Card
         promo_html = """
         <div class="sidebar-promo-card">
             <div class="sidebar-promo-title">⚡ AWS Cloud Mode</div>
@@ -102,7 +80,7 @@ def main() -> None:
             st.rerun()
 
         st.divider()
-        st.caption("Columbus Portfolio Project &bull; BSIT Cloud Security")
+        st.caption("Columbus v0.1.0 &bull; Read-Only Cloud Security Auditor")
 
     # Define the 5 Pages
     pages = [
