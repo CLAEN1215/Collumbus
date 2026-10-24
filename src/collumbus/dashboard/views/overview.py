@@ -96,7 +96,8 @@ def render_overview() -> None:
 
     meter_html = (
         f'<div style="display: flex; height: 16px; border-radius: 9999px; '
-        f'overflow: hidden; margin: 12px 0 20px 0; background: #e2e8f0;">'
+        f"overflow: hidden; margin: 12px 0 20px 0; background: #111e38; "
+        f'border: 1px solid rgba(0, 210, 255, 0.25);">'
         f'<div style="width: {fail_pct:.1f}%; background-color: #ef4444;" '
         f'title="Failures: {fails}"></div>'
         f'<div style="width: {err_pct:.1f}%; background-color: #f59e0b;" '
@@ -136,7 +137,7 @@ def render_overview() -> None:
             ]
         )
         if not status_df.empty:
-            st.bar_chart(status_df, x="Verdict", y="Count", color="#ef4444")
+            st.bar_chart(status_df, x="Verdict", y="Count", color="#00d2ff")
         else:
             st.write("No findings to display.")
 

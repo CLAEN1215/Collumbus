@@ -5,7 +5,7 @@ from pathlib import Path
 import streamlit as st
 
 from collumbus.dashboard.state import get_active_scan, run_and_save_demo_scan
-from collumbus.dashboard.theme import apply_theme
+from collumbus.dashboard.theme import apply_theme, render_header
 from collumbus.dashboard.views import (
     render_coverage,
     render_findings,
@@ -70,6 +70,9 @@ def main() -> None:
         st.Page(render_history, title="Scan History & Trends", icon="⏱️"),
         st.Page(render_rules, title="Security Rules Catalog", icon="📋"),
     ]
+
+    # Branded top header bar
+    render_header()
 
     nav = st.navigation(pages)
     nav.run()
