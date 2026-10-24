@@ -2,9 +2,9 @@
 
 A beginner-friendly, **read-only** AWS cloud configuration auditor written in Python.
 
-> **Status: active development (Phase 5 of 7).** Core audit foundation, demo scanner,
-> security rules, JSON/CSV reporting, 5-page Streamlit web dashboard, and read-only AWS
-> boto3 collector are complete. Not production-ready.
+> **Status: active development (Phase 6 of 7).** Core audit foundation, demo scanner,
+> security rules, JSON/CSV reporting, 5-page Streamlit web dashboard, read-only AWS
+> boto3 collector, static type safety (mypy), Bandit security scanning, and pip-audit CVE verification are complete. Not production-ready.
 
 ## Scope and limits
 
@@ -25,6 +25,7 @@ the available evidence support. It never changes cloud resources.
 | JSON / CSV reports & CSV injection defense | Implemented |
 | Streamlit dashboard (5 pages) and scan history | Implemented |
 | Read-only AWS scanning via boto3 | Implemented |
+| Code hardening: PEP 561 typing, Mypy, Bandit, pip-audit | Implemented |
 
 ## Quick start (Windows PowerShell)
 
@@ -36,7 +37,19 @@ python -m venv .venv
 pip install -r requirements-dev.txt
 pip install -e . --no-deps
 
+# Validate configuration
 python -m collumbus validate-config
-python -m collumbus sample-finding    # prints one SIMULATED finding
+
+# Run demo scan (no AWS account needed)
+python -m collumbus demo-scan
+
+# Launch web dashboard
+python -m collumbus dashboard
+
+# Run full test suite & security checks
 python -m pytest
+ruff check .
+mypy src tests
+bandit -r src
+pip-audit
 ```

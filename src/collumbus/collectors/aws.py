@@ -10,6 +10,7 @@ Follows non-negotiable principles:
 import json
 import logging
 from collections.abc import Sequence
+from typing import Any
 from urllib.parse import unquote
 
 import boto3
@@ -252,12 +253,14 @@ class AwsCollector(Collector):
         for pol in policies:
             arn = pol["Arn"]
             version_id = pol.get("DefaultVersionId")
+            if not isinstance(version_id, str):
+                continue
             attributes: dict[str, object] = {"policy_type": "customer-managed"}
             fetch_errors: list[FetchError] = []
 
             try:
                 ver_resp = iam.get_policy_version(PolicyArn=arn, VersionId=version_id)
-                raw_doc = ver_resp.get("PolicyVersion", {}).get("Document", {})
+                raw_doc: Any = ver_resp.get("PolicyVersion", {}).get("Document", {})
                 if isinstance(raw_doc, str):
                     raw_doc = json.loads(unquote(raw_doc))
                 attributes["policy_document"] = raw_doc

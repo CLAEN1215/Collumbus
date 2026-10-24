@@ -49,11 +49,14 @@ class S3DefaultEncryptionRule(Rule):
         if not isinstance(rules, list) or not rules:
             return self.malformed("encryption_rules", "expected a non-empty list")
 
-        algorithms = []
+        algorithms: list[str] = []
         for rule in rules:
-            if not isinstance(rule, dict) or not isinstance(rule.get("sse_algorithm"), str):
+            if not isinstance(rule, dict):
                 return self.malformed("encryption_rules", "each rule needs an sse_algorithm")
-            algorithms.append(rule["sse_algorithm"])
+            alg = rule.get("sse_algorithm")
+            if not isinstance(alg, str):
+                return self.malformed("encryption_rules", "each rule needs an sse_algorithm")
+            algorithms.append(alg)
 
         approved = self.approved_algorithms()
         unapproved = [a for a in algorithms if a not in approved]

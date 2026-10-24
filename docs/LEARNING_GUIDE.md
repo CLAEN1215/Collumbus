@@ -248,6 +248,50 @@ modifications.
 2. The difference between a resource missing a configuration (`None`) vs an API call failing (`FetchError`).
 3. Why `AwsCollector` and `DemoCollector` produce identical `CollectionResult` schemas.
 
+## Phase 6: Code Hardening, Static Typing, and Security Assurance
+
+### What we built
+Comprehensive code hardening and security verification using industry-standard static analysis tools:
+
+### Key tools and configurations
+| Tool | Configuration | Purpose |
+|---|---|---|
+| `mypy` | `pyproject.toml` (`[tool.mypy]`), `plugins = ["pydantic.mypy"]` | Static type checking and verification across all source files and tests |
+| `py.typed` | `src/collumbus/py.typed` | PEP 561 marker indicating package provides inline type annotations |
+| `bandit` | `bandit -r src` | AST-based Python security vulnerability analyzer (detects CWE-78, CWE-259, etc.) |
+| `pip-audit` | `pip-audit` | Audits virtual environment and dependency tree against known CVEs via PyPA advisory DB |
+| `ruff` | `pyproject.toml` (`[tool.ruff.lint]`) | Fast linting and style enforcement (E, W, F, I, B, UP, S rules) |
+
+### Concepts
+
+**Type Safety and PEP 561 (`py.typed`).** Python is dynamically typed at runtime, but type checkers
+like Mypy use static type annotations to catch type mismatches, missing attributes, and `None`-dereference
+bugs before code ever runs in production. PEP 561 defines `py.typed` as the standard marker file that tells
+tools a library ships with valid type hints.
+
+**Pydantic Type Integration (`pydantic.mypy`).** Pydantic models perform runtime parsing and validation.
+However, because Pydantic dynamically generates constructors and field validators, vanilla Mypy needs the
+`pydantic.mypy` plugin to recognize generated method signatures, default factory fields, and model copy behaviors.
+
+**AST-Based Security Analysis (Bandit).** Bandit parses Python source code into an Abstract Syntax Tree (AST)
+and looks for common security pitfalls:
+* Insecure use of `subprocess` without shell escaping (`B404`, `B603`).
+* Hardcoded secrets and password-like strings (`B105`).
+* Weak cryptographic hashing algorithms (`B303` - MD5/SHA1 used in security contexts).
+When a flagged line is intentionally safe (e.g., status string `"Pass"` vs a password, or a controlled
+dashboard child process), explicit `# nosec` annotations document the evaluated risk.
+
+**Dependency Vulnerability Auditing (pip-audit).** Vulnerabilities in open-source dependencies (supply
+chain attacks) represent a major attack vector in modern software. `pip-audit` checks installed packages
+against the Python Packaging Advisory Database (OSV/PyPI advisory feed) to verify no dependencies contain
+known Common Vulnerabilities and Exposures (CVEs).
+
+### Before Phase 7, make sure you understand
+1. How `py.typed` allows other projects and type checkers to inspect Collumbus's types.
+2. The difference between linting (Ruff), static typing (Mypy), and AST security scanning (Bandit).
+3. Why dependency scanning (`pip-audit`) is essential in modern DevSecOps pipelines.
+
+
 
 
 

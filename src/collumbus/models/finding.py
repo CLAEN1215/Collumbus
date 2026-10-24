@@ -31,7 +31,7 @@ class Severity(StrEnum):
 class Status(StrEnum):
     """The verdict. ERROR means "could not determine"; it is never a pass."""
 
-    PASS = "Pass"  # noqa: S105 - a status value, not a password
+    PASS = "Pass"  # noqa: S105  # nosec B105
     FAIL = "Fail"
     ERROR = "Error"
     NOT_APPLICABLE = "Not Applicable"
@@ -57,7 +57,7 @@ class Finding(BaseModel):
     # frozen=True: a finding cannot be edited after it is validated.
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    finding_id: str = Field(min_length=16, max_length=16)
+    finding_id: str = Field(default="", min_length=16, max_length=16)
     rule_id: str = Field(pattern=r"^[A-Z0-9]+-\d{3}$")
     title: str = Field(min_length=1)
     severity: Severity
@@ -80,7 +80,7 @@ class Finding(BaseModel):
     @classmethod
     def _fill_finding_id(cls, data: Any) -> Any:
         """Compute finding_id when the caller did not supply one."""
-        if isinstance(data, dict) and "finding_id" not in data:
+        if isinstance(data, dict) and not data.get("finding_id"):
             try:
                 data = {
                     **data,

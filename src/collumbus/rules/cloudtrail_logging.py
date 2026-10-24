@@ -6,6 +6,8 @@ Checks two things:
 Only the regions that were scanned are evaluated; no claim is made about others.
 """
 
+from typing import Any
+
 from collumbus.collectors.base import CLOUDTRAIL_REGION, CLOUDTRAIL_TRAIL, Resource
 from collumbus.models import Severity, Status
 from collumbus.rules.base import Rule, RuleResult
@@ -59,19 +61,25 @@ class CloudTrailLoggingRule(Rule):
         trails = resource.attributes["trails"]
         if not isinstance(trails, list):
             return self.malformed("trails", "expected a list")
+        validated_trails: list[dict[str, Any]] = []
         for trail in trails:
             if not isinstance(trail, dict) or not {"name", "home_region"} <= set(trail):
                 return self.malformed("trails", "each trail needs name and home_region")
+            validated_trails.append(trail)
 
         region = resource.region
         covering = [
-            t for t in trails if t.get("is_multi_region") is True or t["home_region"] == region
+            t
+            for t in validated_trails
+            if t.get("is_multi_region") is True or t.get("home_region") == region
         ]
-        logging_names = [t["name"] for t in covering if t.get("is_logging") is True]
-        unknown_names = [t["name"] for t in covering if not isinstance(t.get("is_logging"), bool)]
-        evidence = {
+        logging_names: list[str] = [str(t["name"]) for t in covering if t.get("is_logging") is True]
+        unknown_names: list[str] = [
+            str(t["name"]) for t in covering if not isinstance(t.get("is_logging"), bool)
+        ]
+        evidence: dict[str, Any] = {
             "region": region,
-            "trails_covering_region": [t["name"] for t in covering],
+            "trails_covering_region": [str(t["name"]) for t in covering],
             "logging_trails": logging_names,
             "trails_with_unknown_status": unknown_names,
         }

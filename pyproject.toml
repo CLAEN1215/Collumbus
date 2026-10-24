@@ -9,8 +9,14 @@ description = "Beginner-friendly, read-only AWS cloud configuration auditor"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "annotated-types==0.8.0",
+    "boto3==1.43.118",
     "pydantic==2.14.1",
+    "pydantic_core==2.50.1",
     "PyYAML==6.0.3",
+    "streamlit==1.66.1",
+    "typing-inspection==0.4.4",
+    "typing_extensions==4.16.0",
 ]
 
 [project.scripts]
@@ -38,3 +44,12 @@ select = ["E", "W", "F", "I", "B", "UP", "S"]
 [tool.ruff.lint.per-file-ignores]
 # pytest uses plain `assert` statements
 "tests/**" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_unused_configs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["pandas.*", "streamlit.*"]
+ignore_missing_imports = true

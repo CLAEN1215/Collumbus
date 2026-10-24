@@ -165,7 +165,7 @@ def _cmd_export_csv(args: argparse.Namespace) -> int:
 
 
 def _cmd_dashboard(args: argparse.Namespace) -> int:
-    import subprocess
+    import subprocess  # nosec B404
 
     from collumbus.dashboard import APP_PATH
 
@@ -175,14 +175,14 @@ def _cmd_dashboard(args: argparse.Namespace) -> int:
     if args.no_browser:
         cmd.append("--server.headless=true")
 
-    result = subprocess.run(cmd, check=False)  # noqa: S603
+    result = subprocess.run(cmd, check=False)  # noqa: S603 # nosec B603
     return result.returncode
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="collumbus",
-        description="Read-only AWS configuration auditor (demo mode only so far).",
+        description="Read-only AWS configuration auditor (demo and AWS modes).",
     )
     parser.add_argument("--version", action="version", version=f"collumbus {__version__}")
     parser.add_argument("-v", "--verbose", action="store_true", help="show debug logs")
