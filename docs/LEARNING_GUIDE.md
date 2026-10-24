@@ -155,4 +155,51 @@ to produce focused remediation worklists.
 2. How `Scan.model_validate_json()` validates reloaded JSON reports against the exact same schema.
 3. How sorting by status and severity aids rapid incident response.
 
+## Phase 4: Streamlit Dashboard and Scan History
+
+### What we built
+An interactive 5-page Streamlit web dashboard and historical scan tracking system:
+
+### Key files
+| File | Purpose |
+|---|---|
+| `src/collumbus/history.py` | Scan persistence, correlation (`first_detected` age), and audit diffing |
+| `src/collumbus/dashboard/app.py` | Main Streamlit entry point with sidebar status and page navigation |
+| `src/collumbus/dashboard/state.py` | Session state management and scan execution integration |
+| `src/collumbus/dashboard/views/overview.py` | Page 1: Executive posture metrics, completion banner, and charts |
+| `src/collumbus/dashboard/views/findings.py` | Page 2: Filterable findings explorer, risk/fix details, evidence, exports |
+| `src/collumbus/dashboard/views/coverage.py` | Page 3: Coverage gaps explorer and minimal IAM policy generator |
+| `src/collumbus/dashboard/views/history.py` | Page 4: Scan timeline, baseline comparison diff, and on-demand runner |
+| `src/collumbus/dashboard/views/rules.py` | Page 5: Rules catalog, security rationale, and config inspector |
+| `src/collumbus/cli.py` | Added `dashboard` command to launch the web interface |
+
+### Concepts
+
+**Tracking issue lifecycles across scans.** In Phase 1 we established that `finding_id` is a stable
+SHA-256 hash of `[rule_id, account_id, region, resource_id]`. In Phase 4, `src/collumbus/history.py`
+uses this identity to correlate findings across multiple audits. If an unencrypted bucket was
+first detected three months ago, `correlate_scan_with_history()` preserves the original
+`first_detected` timestamp, showing the true age of unaddressed debt.
+
+**Audit diffing (New, Resolved, Recurring).** `compare_scans()` compares a baseline scan with
+a newer scan. Findings present in the baseline but absent in the current scan are marked **Resolved**
+(fixed), findings appearing for the first time are marked **New** (regressions or new deployments),
+and findings persisting in both are marked **Recurring**.
+
+**Automated remediation policy generation.** When coverage gaps occur (e.g. `AccessDenied` for
+`iam:ListUserPolicies` or `s3:GetBucketPublicAccessBlock`), the Coverage page synthesizes a
+minimal read-only IAM policy document that an administrator can directly apply to grant the
+auditor complete visibility.
+
+**Multi-perspective interface.** Executive leadership needs high-level posture metrics (completion
+status, overall failure rates, severity breakdown), compliance auditors need comprehensive inventories
+and proof of coverage, while engineers need immediate step-by-step remediation commands and evidence.
+The 5-page layout serves all three stakeholders in one application.
+
+### Before Phase 5, make sure you understand
+1. How stable finding IDs enable tracking the age and resolution of security findings across time.
+2. How the dashboard surfaces coverage gaps as security concerns rather than passing grades.
+3. Why the audit tool generates minimal read-only IAM policies rather than modifying cloud state.
+
+
 

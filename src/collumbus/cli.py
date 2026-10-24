@@ -142,6 +142,21 @@ def _cmd_export_csv(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_dashboard(args: argparse.Namespace) -> int:
+    import subprocess
+
+    from collumbus.dashboard import APP_PATH
+
+    cmd = [sys.executable, "-m", "streamlit", "run", str(APP_PATH)]
+    if args.port:
+        cmd.extend(["--server.port", str(args.port)])
+    if args.no_browser:
+        cmd.append("--server.headless=true")
+
+    result = subprocess.run(cmd, check=False)  # noqa: S603
+    return result.returncode
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="collumbus",
@@ -179,6 +194,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--failures-only", action="store_true", help="include only Fail/Error in CSV report"
     )
     p_export.set_defaults(func=_cmd_export_csv)
+
+    p_dash = sub.add_parser("dashboard", help="launch the Streamlit web dashboard")
+    p_dash.add_argument(
+        "--port", type=int, default=8501, help="port to bind the dashboard to (default: 8501)"
+    )
+    p_dash.add_argument(
+        "--no-browser", action="store_true", help="run headless without opening a browser window"
+    )
+    p_dash.set_defaults(func=_cmd_dashboard)
 
     return parser
 

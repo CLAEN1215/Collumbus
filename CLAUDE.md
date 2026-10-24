@@ -50,8 +50,8 @@ learning summary, then **stop and wait for approval** before the next phase.
 | 1 | Foundation: structure, models, config, logging, CLI, tests | Done |
 | 2 | Demo collector, rule interface, scanner, 4 checks, fixtures | Done |
 | 3 | JSON + CSV reporting | Done |
-| 4 | Streamlit dashboard (5 pages) | Next |
-| 5 | AWS read-only boto3 collector (label "live-unverified" if not live-tested) | |
+| 4 | Streamlit dashboard (5 pages) | Done |
+| 5 | AWS read-only boto3 collector (label "live-unverified" if not live-tested) | Next |
 | 6 | Hardening: stubs, Ruff, Bandit, pip-audit, docs | |
 | 7 | Portfolio prep | |
 

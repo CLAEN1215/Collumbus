@@ -1,6 +1,7 @@
 import json
 import subprocess  # noqa: S404 - test runs our own module with fixed arguments
 import sys
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -114,3 +115,16 @@ def test_export_csv_missing_file_reports_error(tmp_path, capsys):
     missing_json = tmp_path / "nonexistent.json"
     assert main(["export-csv", str(missing_json)]) == 2
     assert "Error: cannot read JSON report" in capsys.readouterr().err
+
+
+def test_dashboard_cli_calls_streamlit():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0)
+        assert main(["dashboard", "--port", "9000", "--no-browser"]) == 0
+        args, _ = mock_run.call_args
+        cmd = args[0]
+        assert "streamlit" in cmd
+        assert "run" in cmd
+        assert "--server.port" in cmd
+        assert "9000" in cmd
+        assert "--server.headless=true" in cmd

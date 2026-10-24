@@ -2,8 +2,8 @@
 
 A beginner-friendly, **read-only** AWS cloud configuration auditor written in Python.
 
-> **Status: early development (Phase 1 of 7).** Only the foundation exists so far: data
-> models, config validation, logging with redaction, and a small CLI. No scanning yet.
+> **Status: active development (Phase 4 of 7).** Core audit foundation, demo scanner,
+> security rules, JSON/CSV reporting, and a 5-page Streamlit web dashboard are complete.
 > Not production-ready.
 
 ## Scope and limits
@@ -21,9 +21,9 @@ the available evidence support. It never changes cloud resources.
 | `config/rules.yaml` validation | Implemented |
 | Secret redaction in evidence and logs | Implemented |
 | CLI: `validate-config`, `sample-finding` | Implemented |
-| Demo scanner + checks S3-001, S3-002, IAM-001, CT-001 | Planned (Phase 2) |
-| JSON / CSV reports | Planned (Phase 3) |
-| Streamlit dashboard and scan history | Planned (Phase 4) |
+| Demo scanner + checks S3-001, S3-002, IAM-001, CT-001 | Implemented |
+| JSON / CSV reports & CSV injection defense | Implemented |
+| Streamlit dashboard (5 pages) and scan history | Implemented |
 | Read-only AWS scanning via boto3 | Planned (Phase 5) |
 
 ## Quick start (Windows PowerShell)
