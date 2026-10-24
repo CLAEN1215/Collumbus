@@ -291,6 +291,37 @@ known Common Vulnerabilities and Exposures (CVEs).
 2. The difference between linting (Ruff), static typing (Mypy), and AST security scanning (Bandit).
 3. Why dependency scanning (`pip-audit`) is essential in modern DevSecOps pipelines.
 
+## Phase 7: Portfolio Preparation & Security Engineering Communication
+
+### What we built
+Comprehensive portfolio presentation, architecture diagrams, interview talking points, and an end-to-end demonstration guide.
+
+### Key assets
+| Asset | Location | Purpose |
+|---|---|---|
+| Portfolio & Interview Guide | `docs/PORTFOLIO_GUIDE.md` | Complete guide for job interviews, architecture talking points, and live demo script |
+| System Architecture Diagram | `README.md` & `docs/PORTFOLIO_GUIDE.md` | Mermaid diagram documenting dataflow from collectors to findings and reports |
+| Project Showcase README | `README.md` | Comprehensive documentation, security guarantees, CLI reference, and DevSecOps verification |
+
+### Concepts
+
+**Communicating security trade-offs.** As a cybersecurity student, building software is only half
+the battle; the other half is communicating *why* you made specific architectural choices. For example:
+* *Why no auto-remediation?* Because security tools must not induce service outages (availability impact).
+* *Why fail-closed on API errors?* Because treating missing information as a pass creates a false sense of security.
+* *Why sanitize CSV exports?* Because formula injection (CWE-1236) turns security reports into attack payloads against the security analysts reading them.
+
+**Decoupled collector architecture.** By standardizing on `CollectionResult` and `Resource` models,
+the scanner engine has zero knowledge of whether data came from a simulated JSON fixture or live AWS
+Boto3 API calls. This separation of concerns allows complete offline testing and rule development
+without cloud costs, credentials, or network access.
+
+**DevSecOps quality gates.** A security project should follow the highest standards of software
+engineering. Incorporating static typing (`mypy`), AST security scanning (`bandit`), dependency audits
+(`pip-audit`), automated linting (`ruff`), and regression testing (`pytest`) demonstrates an understanding
+of defensive software engineering and the Secure Software Development Lifecycle (SSDLC).
+
+
 
 
 

@@ -53,7 +53,7 @@ learning summary, then **stop and wait for approval** before the next phase.
 | 4 | Streamlit dashboard (5 pages) | Done |
 | 5 | AWS read-only boto3 collector (label "live-unverified" if not live-tested) | Done |
 | 6 | Hardening: stubs, Ruff, Bandit, pip-audit, docs | Done |
-| 7 | Portfolio prep | Next |
+| 7 | Portfolio prep | Done |
 
 ## Design notes
 - `finding_id` = first 16 hex chars of SHA-256 over JSON `[rule_id, account, region, resource_id]`.
