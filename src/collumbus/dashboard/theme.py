@@ -20,7 +20,13 @@ import streamlit as st
 from collumbus.models import Severity, Status
 
 ASSETS_DIR = Path(__file__).parent / "assets"
+BRAND_DIR = ASSETS_DIR / "brand"
 LOGO_FILE = ASSETS_DIR / "logo.png"
+LOGO_HORIZONTAL = BRAND_DIR / "logo_horizontal.png"
+LOGO_COMPACT = BRAND_DIR / "logo_compact.png"
+LOGO_STACKED = BRAND_DIR / "logo_stacked.png"
+FAVICON = BRAND_DIR / "favicon.png"
+APP_ICON = BRAND_DIR / "app_icon.png"
 
 
 def apply_theme() -> None:
@@ -354,12 +360,18 @@ def apply_theme() -> None:
 
 
 def render_header() -> None:
-    """Render the Nocturn-style top SaaS navigation bar."""
-    if LOGO_FILE.exists():
+    """Render the Nocturn-style top SaaS navigation bar using the compact logo."""
+    if LOGO_COMPACT.exists():
+        encoded = base64.b64encode(LOGO_COMPACT.read_bytes()).decode("utf-8")
+        logo_tag = (
+            f'<img src="data:image/png;base64,{encoded}" height="28" '
+            'style="border-radius: 4px;" alt="Columbus" />'
+        )
+    elif LOGO_FILE.exists():
         encoded = base64.b64encode(LOGO_FILE.read_bytes()).decode("utf-8")
         logo_tag = (
-            f'<img src="data:image/png;base64,{encoded}" height="30" '
-            'style="border-radius: 6px;" alt="Columbus" />'
+            f'<img src="data:image/png;base64,{encoded}" height="28" '
+            'style="border-radius: 4px;" alt="Columbus" />'
         )
     else:
         logo_tag = '<div class="nocturn-brand-badge">C</div>'
@@ -368,7 +380,6 @@ def render_header() -> None:
     <div class="nocturn-top-bar">
         <div class="nocturn-brand-group">
             {logo_tag}
-            <span class="nocturn-brand-name">Columbus</span>
         </div>
         <div class="nocturn-search-pill">
             <span>🔍</span>

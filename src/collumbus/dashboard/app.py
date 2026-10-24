@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import streamlit as st
+from PIL import Image
 
 from collumbus.dashboard.state import get_active_scan, run_and_save_demo_scan
 from collumbus.dashboard.theme import apply_theme, render_header
@@ -15,13 +16,19 @@ from collumbus.dashboard.views import (
 )
 from collumbus.models import Source
 
+BRAND_DIR = Path(__file__).parent / "assets" / "brand"
+FAVICON_PATH = BRAND_DIR / "favicon.png"
+LOGO_STACKED_PATH = BRAND_DIR / "logo_stacked.png"
+LOGO_HORIZONTAL_PATH = BRAND_DIR / "logo_horizontal.png"
 LOGO_PATH = Path(__file__).parent / "assets" / "logo.png"
 
 
 def main() -> None:
+    page_icon_obj = Image.open(FAVICON_PATH) if FAVICON_PATH.exists() else "🧭"
+
     st.set_page_config(
         page_title="Columbus — Cloud Security Auditor",
-        page_icon="🧭",
+        page_icon=page_icon_obj,
         layout="wide",
         initial_sidebar_state="expanded",
     )
@@ -31,10 +38,18 @@ def main() -> None:
 
     # Sidebar Branding (Nocturn Style)
     with st.sidebar:
-        # User profile at top of sidebar
+        # 1. Official Vertical / Primary Block Logo (Stacked)
+        if LOGO_STACKED_PATH.exists():
+            st.image(str(LOGO_STACKED_PATH), use_container_width=True)
+        elif LOGO_PATH.exists():
+            st.image(str(LOGO_PATH), use_container_width=True)
+
+        st.write("")
+
+        # 2. Auditor Profile Card
         profile_html = """
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem;">
-            <div style="width: 38px; height: 38px; border-radius: 50%;
+            <div style="width: 36px; height: 36px; border-radius: 50%;
                  background: linear-gradient(135deg, #7c3aed 0%, #38bdf8 100%);
                  display: flex; align-items: center; justify-content: center;
                  font-weight: 800; font-size: 0.85rem; color: #ffffff;">LM</div>

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="Columbus - Cloud Security Auditor" width="700"/>
+  <img src="assets/brand/logo_horizontal.png" alt="Columbus - Cloud Security Auditor" width="700"/>
 </p>
 
 <p align="center">
