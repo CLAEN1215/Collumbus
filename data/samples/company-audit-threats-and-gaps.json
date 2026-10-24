@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "description": "Company Cloud Infrastructure Audit Sample with real Threats, Gaps, and Passing Controls",
+  "account_id": "413921545437",
+  "regions": ["us-east-1", "ap-southeast-2"],
+  "resource_categories": ["s3", "iam", "cloudtrail"],
+  "resources": [
+    {
+      "resource_type": "AWS::S3::Bucket",
+      "resource_id": "company-public-marketing-bucket",
+      "region": "us-east-1",
+      "category": "s3",
+      "attributes": {
+        "public_access_block": {
+          "BlockPublicAcls": false,
+          "IgnorePublicAcls": false,
+          "BlockPublicPolicy": false,
+          "RestrictPublicBuckets": false
+        },
+        "encryption_rules": [{"sse_algorithm": "AES256"}]
+      }
+    },
+    {
+      "resource_type": "AWS::S3::Bucket",
+      "resource_id": "company-unencrypted-backups",
+      "region": "ap-southeast-2",
+      "category": "s3",
+      "attributes": {
+        "public_access_block": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        },
+        "encryption_rules": null
+      }
+    },
+    {
+      "resource_type": "AWS::S3::Bucket",
+      "resource_id": "company-financial-vault-locked",
+      "region": "us-east-1",
+      "category": "s3",
+      "attributes": {},
+      "fetch_errors": [
+        {
+          "attribute": "public_access_block",
+          "code": "AccessDenied",
+          "message": "Auditor role lacks s3:GetBucketPublicAccessBlock permission",
+          "permission": "s3:GetBucketPublicAccessBlock"
+        }
+      ]
+    },
+    {
+      "resource_type": "AWS::S3::Bucket",
+      "resource_id": "company-secure-customer-data",
+      "region": "us-east-1",
+      "category": "s3",
+      "attributes": {
+        "public_access_block": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        },
+        "encryption_rules": [{"sse_algorithm": "aws:kms", "bucket_key_enabled": true}]
+      }
+    },
+    {
+      "resource_type": "AWS::IAM::Policy",
+      "resource_id": "arn:aws:iam::413921545437:policy/OverpermissiveDevAdmin",
+      "region": "global",
+      "category": "iam",
+      "attributes": {
+        "policy_type": "customer-managed",
+        "policy_document": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "AllowFullAdminAccess",
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource_type": "AWS::IAM::Policy",
+      "resource_id": "arn:aws:iam::413921545437:policy/SecureReadOnlyAuditor",
+      "region": "global",
+      "category": "iam",
+      "attributes": {
+        "policy_type": "customer-managed",
+        "policy_document": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadOnlyPermissions",
+              "Effect": "Allow",
+              "Action": [
+                "s3:Get*",
+                "s3:List*",
+                "iam:Get*",
+                "iam:List*"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource_type": "AWS::CloudTrail::Trail",
+      "resource_id": "dormant-disabled-audit-trail",
+      "region": "ap-southeast-2",
+      "category": "cloudtrail",
+      "attributes": {
+        "is_logging": false,
+        "is_multi_region": false
+      }
+    }
+  ],
+  "gaps": [
+    {
+      "category": "iam",
+      "region": "global",
+      "reason": "AccessDenied",
+      "missing_permission": "iam:ListUserPolicies",
+      "detail": "Auditor role lacks permission to list inline user policies"
+    }
+  ]
+}
