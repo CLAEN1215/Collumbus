@@ -1,0 +1,32 @@
+# Secrets and local environment: never commit these
+.env
+.env.*
+!.env.example
+.aws/
+
+# Virtual environment
+.venv/
+venv/
+
+# Scan output (may contain real cloud inventory)
+history/
+reports/
+*.report.json
+*.report.csv
+
+# Python / tooling caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

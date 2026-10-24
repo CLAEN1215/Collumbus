@@ -1,0 +1,27 @@
+# Collumbus rule configuration.
+# Loaded with yaml.safe_load and validated; unknown keys or rule IDs are rejected.
+
+rules:
+  # Severity = how serious a FAILED check is. Reasoning lives in docs/SECURITY_RULES.md.
+  S3-001:   # S3 Public Access Block
+    enabled: true
+    severity: High
+  S3-002:   # S3 Default Encryption
+    enabled: true
+    severity: Medium
+  IAM-001:  # IAM Wildcard Permissions
+    enabled: true
+    severity: High
+  CT-001:   # CloudTrail Logging
+    enabled: true
+    severity: High
+
+s3_encryption:
+  # Server-side encryption algorithms this project's policy accepts.
+  #   AES256        = SSE-S3 (keys managed by S3)
+  #   aws:kms       = SSE-KMS (AWS-managed or customer-managed KMS key)
+  #   aws:kms:dsse  = DSSE-KMS (dual-layer encryption with KMS)
+  approved_algorithms:
+    - AES256
+    - aws:kms
+    - aws:kms:dsse

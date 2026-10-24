@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "collumbus"
+dynamic = ["version"]
+description = "Beginner-friendly, read-only AWS cloud configuration auditor"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic==2.14.1",
+    "PyYAML==6.0.3",
+]
+
+[project.scripts]
+collumbus = "collumbus.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "collumbus.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# E/W/F: style and errors, I: import order, B: bug patterns, UP: modern syntax,
+# S: security checks (Bandit rules built into Ruff)
+select = ["E", "W", "F", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+# pytest uses plain `assert` statements
+"tests/**" = ["S101"]
