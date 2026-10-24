@@ -1,6 +1,5 @@
 """History page: browse past audit runs, compare scans, and track issue lifecycles."""
 
-import altair as alt
 import pandas as pd
 import streamlit as st
 from pydantic import ValidationError
@@ -32,7 +31,6 @@ def render_history() -> None:
     with act_col1:
         if st.button("🚀 Run New Demo Scan", type="primary", use_container_width=True):
             new_scan = run_and_save_demo_scan()
-            st.session_state["sidebar_scan_select"] = new_scan.scan_id
             st.success(f"Executed and saved scan `{new_scan.scan_id[:8]}`!")
             st.rerun()
 
@@ -45,7 +43,6 @@ def render_history() -> None:
                 content = uploaded_file.read().decode("utf-8")
                 loaded_scan = Scan.model_validate_json(content)
                 set_active_scan(loaded_scan)
-                st.session_state["sidebar_scan_select"] = loaded_scan.scan_id
                 st.success(f"Loaded external scan `{loaded_scan.scan_id[:8]}` into active view!")
                 st.rerun()
             except ValidationError as exc:
@@ -78,25 +75,7 @@ def render_history() -> None:
                 }
             )
         trend_df = pd.DataFrame(trend_records)
-        melted = trend_df.melt("Timestamp", var_name="Metric", value_name="Count")
-        trend_chart = (
-            alt.Chart(melted)
-            .mark_line(point=True)
-            .encode(
-                x=alt.X("Timestamp:N", title="Scan Time (UTC)"),
-                y=alt.Y("Count:Q", title="Finding Count"),
-                color=alt.Color(
-                    "Metric:N",
-                    scale=alt.Scale(
-                        domain=["Failures", "Errors", "Total Findings"],
-                        range=["#ef4444", "#f59e0b", "#3b82f6"],
-                    ),
-                ),
-                tooltip=["Timestamp", "Metric", "Count"],
-            )
-            .properties(height=240)
-        )
-        st.altair_chart(trend_chart, use_container_width=True)
+        st.line_chart(trend_df, x="Timestamp", y=["Failures", "Errors", "Total Findings"])
 
     # Scan History Table
     st.subheader("Historical Audit Records")

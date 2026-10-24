@@ -2,7 +2,6 @@
 
 from collections import Counter
 
-import altair as alt
 import pandas as pd
 import streamlit as st
 
@@ -13,21 +12,6 @@ from collumbus.models import Severity, Source, Status
 STATUS_ORDER = [Status.FAIL, Status.ERROR, Status.PASS, Status.NOT_APPLICABLE]
 SEVERITY_ORDER = list(reversed(Severity))
 SEVERITY_ORDER_NAMES = [s.value for s in SEVERITY_ORDER]
-
-STATUS_COLORS = {
-    "Fail": "#ef4444",
-    "Error": "#f59e0b",
-    "Pass": "#10b981",  # nosec B105
-    "Not Applicable": "#9ca3af",
-}
-
-SEVERITY_COLORS = {
-    "Critical": "#991b1b",
-    "High": "#ef4444",
-    "Medium": "#f59e0b",
-    "Low": "#3b82f6",
-    "Informational": "#6b7280",
-}
 
 
 def render_overview() -> None:
@@ -94,39 +78,39 @@ def render_overview() -> None:
 
     st.divider()
 
-    # Visualizations
-    st.subheader("Security Posture Visualizations")
+    # Visual Posture Meter
+    st.subheader("Security Posture Breakdown")
+    total_findings = len(scan.findings) or 1
+    fail_pct = (fails / total_findings) * 100
+    err_pct = (errors / total_findings) * 100
+    pass_pct = (passes / total_findings) * 100
+
+    meter_html = (
+        f'<div style="display: flex; height: 16px; border-radius: 9999px; '
+        f'overflow: hidden; margin: 10px 0 16px 0; background: #e2e8f0;">'
+        f'<div style="width: {fail_pct:.1f}%; background-color: #ef4444;" '
+        f'title="Failures: {fails}"></div>'
+        f'<div style="width: {err_pct:.1f}%; background-color: #f59e0b;" '
+        f'title="Errors: {errors}"></div>'
+        f'<div style="width: {pass_pct:.1f}%; background-color: #10b981;" '
+        f'title="Passes: {passes}"></div>'
+        f'</div>'
+    )
+    st.markdown(meter_html, unsafe_allow_html=True)
+
     chart_col1, chart_col2 = st.columns(2)
 
     with chart_col1:
         st.markdown("**Findings by Verdict**")
         status_df = pd.DataFrame(
             [
-                {"Status": s.value, "Count": status_counts.get(s, 0)}
+                {"Verdict": s.value, "Count": status_counts.get(s, 0)}
                 for s in STATUS_ORDER
                 if status_counts.get(s, 0) > 0
             ]
         )
         if not status_df.empty:
-            status_chart = (
-                alt.Chart(status_df)
-                .mark_arc(innerRadius=45, cornerRadius=4)
-                .encode(
-                    theta=alt.Theta(field="Count", type="quantitative"),
-                    color=alt.Color(
-                        field="Status",
-                        type="nominal",
-                        scale=alt.Scale(
-                            domain=list(STATUS_COLORS.keys()),
-                            range=list(STATUS_COLORS.values()),
-                        ),
-                        legend=alt.Legend(title="Verdict", orient="bottom"),
-                    ),
-                    tooltip=["Status", "Count"],
-                )
-                .properties(height=260)
-            )
-            st.altair_chart(status_chart, use_container_width=True)
+            st.bar_chart(status_df, x="Verdict", y="Count", color="#ef4444")
         else:
             st.write("No findings to display.")
 
@@ -142,25 +126,7 @@ def render_overview() -> None:
             ]
         )
         if not sev_df.empty:
-            sev_chart = (
-                alt.Chart(sev_df)
-                .mark_bar(cornerRadiusTopLeft=6, cornerRadiusTopRight=6)
-                .encode(
-                    x=alt.X("Severity:N", sort=SEVERITY_ORDER_NAMES, title=None),
-                    y=alt.Y("Count:Q", title="Failing Findings", axis=alt.Axis(tickMinStep=1)),
-                    color=alt.Color(
-                        "Severity:N",
-                        scale=alt.Scale(
-                            domain=list(SEVERITY_COLORS.keys()),
-                            range=list(SEVERITY_COLORS.values()),
-                        ),
-                        legend=None,
-                    ),
-                    tooltip=["Severity", "Count"],
-                )
-                .properties(height=260)
-            )
-            st.altair_chart(sev_chart, use_container_width=True)
+            st.bar_chart(sev_df, x="Severity", y="Count", color="#f59e0b")
         else:
             st.success("No failing findings in this scan!")
 
