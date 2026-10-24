@@ -11,16 +11,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install dependencies first for efficient layer caching
-COPY pyproject.toml ./
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir .
-
-# Copy source code and configuration
+# Copy project configuration, docs, and source files
+COPY pyproject.toml README.md ./
 COPY src/ ./src/
 COPY config/ ./config/
 COPY assets/ ./assets/
 COPY app.py ./
+
+# Install dependencies and package
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir .
 
 # Create a non-root user for security hardening
 RUN useradd -m -u 10001 appuser && \
