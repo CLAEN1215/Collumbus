@@ -1,24 +1,31 @@
 """Command-line entry point: `collumbus ...` or `python -m collumbus ...`.
 
-Phase 1 commands:
+Commands:
   validate-config   check config/rules.yaml
   sample-finding    print one SIMULATED finding as JSON (proves the model works)
-
-The demo scan command arrives in Phase 2, together with the scanner.
+  demo-scan         scan the fictional demo dataset and print the results
 """
 
 import argparse
 import logging
 import sys
+from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 
 from collumbus import __version__
+from collumbus.collectors import DemoCollector, DemoDataError
+from collumbus.collectors.demo import DEFAULT_DEMO_PATH
 from collumbus.config import DEFAULT_CONFIG_PATH, ConfigError, load_config
+from collumbus.engine import run_scan
 from collumbus.logging_setup import setup_logging
-from collumbus.models import Finding, Severity, Source, Status
+from collumbus.models import Finding, Scan, Severity, Source, Status
 
 SIMULATED_BANNER = "SIMULATED DATA: fictional demo finding, not a real AWS result."
+SIMULATED_SCAN_BANNER = "SIMULATED DATA: fictional demo resources, not a real AWS account."
+
+STATUS_ORDER = [Status.FAIL, Status.ERROR, Status.PASS, Status.NOT_APPLICABLE]
+SEVERITY_ORDER = list(reversed(Severity))  # Critical first
 
 
 def build_sample_finding() -> Finding:
@@ -67,10 +74,55 @@ def _cmd_sample_finding(args: argparse.Namespace) -> int:
     return 0
 
 
+def format_scan_summary(scan: Scan) -> str:
+    """Human-readable scan summary. One finding = one rule's verdict on one resource."""
+    counts = Counter(f.status for f in scan.findings)
+    lines = [
+        f"Scan {scan.scan_id}  source={scan.source}  account={scan.account_id}",
+        f"Regions: {', '.join(scan.regions)}   Categories: {', '.join(scan.resource_categories)}",
+        f"Resources inspected: {scan.coverage.resources_inspected}   "
+        f"Findings: {len(scan.findings)}   "
+        + "   ".join(f"{s}: {counts.get(s, 0)}" for s in STATUS_ORDER),
+        f"Complete: {'yes' if scan.is_complete else 'NO (see coverage gaps and Error findings)'}",
+        "",
+    ]
+    ordered = sorted(
+        scan.findings,
+        key=lambda f: (
+            STATUS_ORDER.index(f.status),
+            SEVERITY_ORDER.index(f.severity),
+            f.rule_id,
+            f.resource_id,
+        ),
+    )
+    for f in ordered:
+        lines.append(
+            f"[{f.status:<5}] {f.severity:<13} {f.rule_id:<8} {f.region:<10} {f.resource_id}"
+        )
+        lines.append(f"        {f.summary}")
+    if scan.coverage.gaps:
+        lines += ["", "Coverage gaps (not inspected, NOT passes):"]
+        for g in scan.coverage.gaps:
+            perm = f", needs {g.missing_permission}" if g.missing_permission else ""
+            lines.append(
+                f"  - {g.category}/{g.region}/{g.resource_id or '*'}: "
+                f"{g.detail or 'not inspected'} ({g.reason}{perm})"
+            )
+    return "\n".join(lines)
+
+
+def _cmd_demo_scan(args: argparse.Namespace) -> int:
+    config = load_config(args.config)
+    scan = run_scan(DemoCollector(args.data), config)
+    print(SIMULATED_SCAN_BANNER)
+    print(format_scan_summary(scan))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="collumbus",
-        description="Read-only AWS configuration auditor (Phase 1: foundation only).",
+        description="Read-only AWS configuration auditor (demo mode only so far).",
     )
     parser.add_argument("--version", action="version", version=f"collumbus {__version__}")
     parser.add_argument("-v", "--verbose", action="store_true", help="show debug logs")
@@ -83,6 +135,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_sample = sub.add_parser("sample-finding", help="print one SIMULATED finding as JSON")
     p_sample.set_defaults(func=_cmd_sample_finding)
 
+    p_demo = sub.add_parser(
+        "demo-scan", help="scan the fictional demo dataset and print the results"
+    )
+    p_demo.add_argument("--config", type=Path, default=DEFAULT_CONFIG_PATH)
+    p_demo.add_argument(
+        "--data", type=Path, default=DEFAULT_DEMO_PATH, help="path to demo JSON file"
+    )
+    p_demo.set_defaults(func=_cmd_demo_scan)
+
     return parser
 
 
@@ -91,6 +152,6 @@ def main(argv: list[str] | None = None) -> int:
     setup_logging(logging.DEBUG if args.verbose else logging.WARNING)
     try:
         return args.func(args)
-    except ConfigError as exc:
+    except (ConfigError, DemoDataError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2

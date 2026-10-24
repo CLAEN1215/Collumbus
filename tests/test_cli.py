@@ -51,3 +51,26 @@ def test_python_dash_m_entry_point():
     )
     assert result.returncode == 0
     assert __version__ in result.stdout
+
+
+def test_demo_scan_succeeds(capsys):
+    assert main(["demo-scan"]) == 0
+    out = capsys.readouterr().out
+    assert "SIMULATED DATA" in out
+    assert "Scan " in out
+    assert "Resources inspected: 10" in out
+    assert "Findings: 15" in out
+    assert "Coverage gaps" in out
+
+
+def test_demo_scan_bad_config(tmp_path, capsys):
+    bad_cfg = tmp_path / "bad.yaml"
+    bad_cfg.write_text("not: valid: yaml", encoding="utf-8")
+    assert main(["demo-scan", "--config", str(bad_cfg)]) == 2
+    assert "Error:" in capsys.readouterr().err
+
+
+def test_demo_scan_bad_data(tmp_path, capsys):
+    bad_data = tmp_path / "missing.json"
+    assert main(["demo-scan", "--data", str(bad_data)]) == 2
+    assert "cannot read demo file" in capsys.readouterr().err

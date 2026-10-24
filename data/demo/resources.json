@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "description": "SIMULATED fictional AWS configuration for Collumbus demo mode. Not real data.",
+  "account_id": "111122223333",
+  "regions": ["us-east-1", "eu-west-1"],
+  "resource_categories": ["s3", "iam", "cloudtrail"],
+  "resources": [
+    {
+      "resource_type": "AWS::S3::Bucket",
+      "resource_id": "demo-secure-logs",
+      "region": "us-east-1",
+      "category": "s3",
+      "attributes": {
+        "public_access_block": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        },
+        "encryption_rules": [{"sse_algorithm": "aws:kms", "bucket_key_enabled": true}]
+      }
+    },
+    {
+      "resource_type": "AWS::S3::Bucket",
+      "resource_id": "demo-marketing-assets",
+      "region": "us-east-1",
+      "category": "s3",
+      "attributes": {
+        "public_access_block": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": false,
+          "RestrictPublicBuckets": true
+        },
+        "encryption_rules": [{"sse_algorithm": "AES256"}]
+      }
+    },
+    {
+      "resource_type": "AWS::S3::Bucket",
+      "resource_id": "demo-legacy-uploads",
+      "region": "eu-west-1",
+      "category": "s3",
+      "attributes": {
+        "public_access_block": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        },
+        "encryption_rules": null
+      }
+    },
+    {
+      "resource_type": "AWS::S3::Bucket",
+      "resource_id": "demo-finance-reports",
+      "region": "us-east-1",
+      "category": "s3",
+      "attributes": {},
+      "fetch_errors": [
+        {
+          "attribute": "public_access_block",
+          "code": "AccessDenied",
+          "message": "Simulated: access denied for GetPublicAccessBlock",
+          "permission": "s3:GetBucketPublicAccessBlock"
+        },
+        {
+          "attribute": "encryption_rules",
+          "code": "Throttling",
+          "message": "Simulated: rate exceeded",
+          "permission": "s3:GetEncryptionConfiguration"
+        }
+      ]
+    },
+    {
+      "resource_type": "AWS::IAM::Policy",
+      "resource_id": "arn:aws:iam::111122223333:policy/DemoReportsReadOnly",
+      "region": "global",
+      "category": "iam",
+      "attributes": {
+        "policy_type": "customer-managed",
+        "policy_document": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadReports",
+              "Effect": "Allow",
+              "Action": ["s3:GetObject", "s3:ListBucket"],
+              "Resource": [
+                "arn:aws:s3:::demo-secure-logs",
+                "arn:aws:s3:::demo-secure-logs/*"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource_type": "AWS::IAM::Policy",
+      "resource_id": "arn:aws:iam::111122223333:policy/DemoLegacyAdmin",
+      "region": "global",
+      "category": "iam",
+      "attributes": {
+        "policy_type": "customer-managed",
+        "policy_document": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {"Sid": "EverythingEverywhere", "Effect": "Allow", "Action": "*", "Resource": "*"}
+          ]
+        }
+      }
+    },
+    {
+      "resource_type": "AWS::CloudTrail::Trail",
+      "resource_id": "demo-org-audit-trail",
+      "region": "us-east-1",
+      "category": "cloudtrail",
+      "attributes": {"is_logging": true, "is_multi_region": false}
+    },
+    {
+      "resource_type": "AWS::CloudTrail::Trail",
+      "resource_id": "demo-old-eu-trail",
+      "region": "eu-west-1",
+      "category": "cloudtrail",
+      "attributes": {"is_logging": false, "is_multi_region": false}
+    },
+    {
+      "resource_type": "Collumbus::CloudTrail::RegionCoverage",
+      "resource_id": "region-coverage",
+      "region": "us-east-1",
+      "category": "cloudtrail",
+      "attributes": {
+        "trails": [
+          {"name": "demo-org-audit-trail", "home_region": "us-east-1", "is_multi_region": false, "is_logging": true},
+          {"name": "demo-old-eu-trail", "home_region": "eu-west-1", "is_multi_region": false, "is_logging": false}
+        ]
+      }
+    },
+    {
+      "resource_type": "Collumbus::CloudTrail::RegionCoverage",
+      "resource_id": "region-coverage",
+      "region": "eu-west-1",
+      "category": "cloudtrail",
+      "attributes": {
+        "trails": [
+          {"name": "demo-org-audit-trail", "home_region": "us-east-1", "is_multi_region": false, "is_logging": true},
+          {"name": "demo-old-eu-trail", "home_region": "eu-west-1", "is_multi_region": false, "is_logging": false}
+        ]
+      }
+    }
+  ],
+  "gaps": [
+    {
+      "category": "iam",
+      "region": "global",
+      "reason": "AccessDenied",
+      "missing_permission": "iam:ListUserPolicies",
+      "detail": "Inline user policies"
+    }
+  ]
+}

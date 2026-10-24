@@ -21,6 +21,7 @@ class CoverageGap(BaseModel):
     resource_id: str | None = None  # None = the whole category/region was skipped
     reason: str = Field(min_length=1)  # e.g. "AccessDenied", "Throttling"
     missing_permission: str | None = None  # e.g. "s3:GetEncryptionConfiguration"
+    detail: str = ""  # human-readable description of what was skipped
 
 
 class Coverage(BaseModel):

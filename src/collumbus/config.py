@@ -7,6 +7,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from collumbus.models.finding import Severity
+from collumbus.validation import format_validation_error
 
 logger = logging.getLogger(__name__)
 
@@ -70,10 +71,7 @@ def load_config(path: Path = DEFAULT_CONFIG_PATH) -> AppConfig:
     try:
         config = AppConfig.model_validate(data)
     except ValidationError as exc:
-        problems = "; ".join(
-            f"{'.'.join(str(p) for p in err['loc']) or '(top level)'}: {err['msg']}"
-            for err in exc.errors()
-        )
+        problems = format_validation_error(exc)
         raise ConfigError(f"config file {path} is invalid: {problems}") from exc
 
     logger.debug("Loaded config from %s", path)

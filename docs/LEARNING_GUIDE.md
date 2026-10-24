@@ -58,3 +58,55 @@ was validated.
 1. Why `Error` must never be counted as `Pass`.
 2. Why `finding_id` must not include the scan ID or timestamp.
 3. Why Pydantic rejects unknown fields (`extra="forbid"`) instead of ignoring them.
+
+## Phase 2: Demo Collector, Rules, and Scanner
+
+### What we built
+The audit engine: a normalized resource model, a simulated demo data collector, four core
+security rules, a scanner that coordinates evaluation, and full CLI support with `demo-scan`.
+
+### Key files
+| File | Purpose |
+|---|---|
+| `src/collumbus/collectors/base.py` | `Resource`, `CollectionResult`, `FetchError`, and `Collector` base class |
+| `src/collumbus/collectors/demo.py` | `DemoCollector` reads simulated cloud config from JSON |
+| `data/demo/resources.json` | Fictional AWS resources covering pass, fail, and error scenarios |
+| `src/collumbus/rules/base.py` | Shared `Rule` interface and `RuleResult` verdict model |
+| `src/collumbus/rules/s3_public_access.py` | S3-001: verifies all 4 S3 Block Public Access settings |
+| `src/collumbus/rules/s3_encryption.py` | S3-002: verifies S3 default encryption algorithm against policy |
+| `src/collumbus/rules/iam_wildcard.py` | IAM-001: flags broad wildcard permissions in IAM policies |
+| `src/collumbus/rules/cloudtrail_logging.py` | CT-001: verifies active trails and per-region logging coverage |
+| `src/collumbus/engine/severity.py` | Maps rule verdict + YAML config to finding severity |
+| `src/collumbus/engine/scanner.py` | Runs rules against resources; converts gaps/errors into findings |
+
+### Concepts
+
+**Normalized representation.** Both demo files and real AWS APIs will feed the same data
+structures (`Resource` and `CollectionResult`). The rules have no idea whether data came
+from a JSON file or live boto3 calls, ensuring consistent evaluation.
+
+**Missing configuration vs fetch error.** If a bucket has no encryption configured, AWS returns
+an error (`ServerSideEncryptionConfigurationNotFoundError`), which is a known state (`None`)
+and results in `FAIL`. But if an API call fails due to `AccessDenied` or `Throttling`, that is a
+`FetchError` and results in `ERROR`. A security auditor must never confuse "not configured" with
+"could not inspect".
+
+**Separation of verdict from severity.** Rules evaluate resource state and return a `Status`
+(Pass, Fail, Error, Not Applicable). They do not decide business impact. The engine assigns
+severity using `config/rules.yaml`. If an organization considers unencrypted buckets Low severity
+instead of High, they adjust the config file without touching rule code.
+
+**Crash isolation.** A security auditor running across hundreds of resources must be resilient.
+If a buggy rule raises an unhandled exception or receives malformed data, `scanner.py` logs the
+error locally and produces an `ERROR` finding, allowing all other rules to finish inspecting the
+target.
+
+**Coverage gaps as first-class findings (SYS-001).** If an entire API call was denied
+(e.g., `iam:ListUserPolicies`), the scanner records a `CoverageGap` and synthesizes a `SYS-001`
+finding. This ensures uninspected areas appear prominently in summaries and reports.
+
+### Before Phase 3, make sure you understand
+1. How `Resource.attributes` differs from `Resource.fetch_errors`.
+2. Why a rule returns `RuleResult` rather than directly creating a `Finding`.
+3. How `scanner.py` guarantees an incomplete scan when coverage gaps or rule errors occur.
+
