@@ -1,12 +1,14 @@
-"""Cybersecurity theme, responsive CSS, and visual badge helpers for Columbus dashboard.
+"""Nocturn-style modern SaaS dark theme, responsive CSS, and component helpers.
 
-Harmonized with the Columbus Cloud Security Auditor brand palette:
-- Primary Navy Base: #060b17
-- Card / Panel Elevation: #0c162d
-- Accent Cyan / Neon Teal: #00d2ff & #38bdf8
-- Shield Emerald: #10b981
-- Alert Crimson: #ef4444
-- Warning Amber: #f59e0b
+Modeled after modern dark-mode SaaS analytics dashboards:
+- Base Canvas: #0d0e15 (Obsidian Slate)
+- Sidebar: #11121d
+- Card Surface: #161726
+- Subtle Borders: 1px solid rgba(255, 255, 255, 0.07)
+- Primary Accent: #8b5cf6 (Electric Violet / Purple)
+- Secondary Accent: #38bdf8 (Sky Cyan)
+- Positive Delta: #4ade80 (Mint Green)
+- Negative Delta: #fb7185 (Rose Pink)
 - Monospace Typography: 'JetBrains Mono', 'Fira Code', monospace
 """
 
@@ -22,119 +24,156 @@ LOGO_FILE = ASSETS_DIR / "logo.png"
 
 
 def apply_theme() -> None:
-    """Inject professional cybersecurity dark palette and monospace typography."""
+    """Inject Nocturn-style dark SaaS theme and responsive CSS."""
     st.markdown(
         """
         <style>
         /* Import Google JetBrains Mono */
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Inter:wght@400;500;600;700&display=swap');
 
-        /* Universal Monospace Font Application */
+        /* Typography & Canvas Constraints */
         html, body, [class*="css"], .stMarkdown, p, span, label, div,
         input, select, textarea, button, code, pre, table, th, td {
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace !important;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
             font-feature-settings: "zero" 1, "liga" 1;
         }
 
-        /* Container constraints & padding */
         .main .block-container {
             padding-top: 1rem;
             padding-bottom: 3.5rem;
             max-width: 1240px;
         }
 
-        /* Top Branded Header Container */
-        .columbus-header-bar {
-            background: linear-gradient(90deg, #060b17 0%, #0d1830 50%, #060b17 100%);
-            border: 1px solid rgba(0, 210, 255, 0.22);
-            border-radius: 14px;
-            padding: 14px 24px;
-            margin-bottom: 1.5rem;
+        /* Top SaaS Navigation Bar (Nocturn Style) */
+        .nocturn-top-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(0, 210, 255, 0.15);
+            background: #11121d;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            padding: 10px 18px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
         }
-        .columbus-header-logo {
-            max-height: 48px;
-            object-fit: contain;
-            display: block;
+        .nocturn-brand-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        .columbus-status-pill {
-            display: inline-flex;
+        .nocturn-brand-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7c3aed 0%, #38bdf8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 1rem;
+        }
+        .nocturn-brand-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #ffffff;
+            letter-spacing: 0.02em;
+        }
+        .nocturn-search-pill {
+            background: #161726;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 9999px;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            color: #71717a;
+            display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(0, 210, 255, 0.08);
-            border: 1px solid rgba(0, 210, 255, 0.3);
-            color: #38bdf8;
-            font-size: 0.72rem;
-            font-weight: 700;
-            padding: 5px 12px;
+            min-width: 260px;
+        }
+        .nocturn-actions-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nocturn-user-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #161726;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 9999px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
+            padding: 4px 12px 4px 4px;
+            font-size: 0.78rem;
+            color: #e4e4e7;
+            font-weight: 600;
         }
-        .pulse-indicator {
-            width: 8px;
-            height: 8px;
-            background-color: #00d2ff;
+        .nocturn-user-avatar {
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            box-shadow: 0 0 8px #00d2ff;
-            animation: pulse-glow 2s infinite ease-in-out;
-        }
-        @keyframes pulse-glow {
-            0% { transform: scale(0.9); opacity: 0.7; box-shadow: 0 0 4px #00d2ff; }
-            50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 12px #00d2ff; }
-            100% { transform: scale(0.9); opacity: 0.7; box-shadow: 0 0 4px #00d2ff; }
+            background: #3f3f46;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #ffffff;
         }
 
-        /* Metric Cards (Balance, Alignment & Cyan Glow) */
+        /* Metric Cards (Nocturn Rounded Dark Card) */
         div[data-testid="stMetric"] {
-            background: #0c162d !important;
-            border: 1px solid rgba(0, 210, 255, 0.18) !important;
-            border-radius: 12px !important;
-            padding: 16px 20px !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+            background: #161726 !important;
+            border: 1px solid rgba(255, 255, 255, 0.07) !important;
+            border-radius: 16px !important;
+            padding: 20px 22px !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35) !important;
             transition: all 0.2s ease !important;
         }
         div[data-testid="stMetric"]:hover {
-            border-color: rgba(0, 210, 255, 0.45) !important;
+            border-color: rgba(139, 92, 246, 0.35) !important;
             transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(0, 210, 255, 0.12) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
         }
         div[data-testid="stMetricLabel"] {
             font-size: 0.8rem !important;
-            font-weight: 700 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.08em !important;
-            color: #94a3b8 !important;
+            font-weight: 500 !important;
+            text-transform: none !important;
+            letter-spacing: 0.02em !important;
+            color: #8e90a6 !important;
         }
         div[data-testid="stMetricValue"] {
-            font-size: 1.9rem !important;
+            font-size: 2.1rem !important;
             font-weight: 800 !important;
-            color: #f8fafc !important;
+            color: #ffffff !important;
+            margin: 6px 0 !important;
+        }
+        div[data-testid="stMetricDelta"] {
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
         }
 
-        /* Container & Card Styling */
+        /* Card Containers */
         div[data-testid="stVerticalBlock"] > div[data-testid="stContainer"] {
-            border-color: rgba(0, 210, 255, 0.18) !important;
-            background: #091122 !important;
-            border-radius: 12px !important;
+            border: 1px solid rgba(255, 255, 255, 0.07) !important;
+            background: #161726 !important;
+            border-radius: 16px !important;
+            padding: 20px !important;
         }
 
         /* Expander Styling */
         div[data-testid="stExpander"] {
-            background: #0a1326 !important;
-            border: 1px solid rgba(0, 210, 255, 0.18) !important;
-            border-radius: 12px !important;
+            background: #161726 !important;
+            border: 1px solid rgba(255, 255, 255, 0.07) !important;
+            border-radius: 14px !important;
             margin-bottom: 0.85rem !important;
             transition: border-color 0.2s ease !important;
         }
         div[data-testid="stExpander"]:hover {
-            border-color: rgba(0, 210, 255, 0.35) !important;
+            border-color: rgba(139, 92, 246, 0.3) !important;
         }
 
-        /* Pill Badges (Monospace & High Contrast) */
+        /* Pill Badges (Modern SaaS Minimalist) */
         .badge {
             display: inline-block;
             padding: 3px 10px;
@@ -142,93 +181,109 @@ def apply_theme() -> None:
             font-weight: 700;
             border-radius: 9999px;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.06em;
             vertical-align: middle;
             margin-right: 6px;
             line-height: 1.4;
             font-family: 'JetBrains Mono', monospace !important;
         }
         .badge-fail {
-            background-color: rgba(239, 68, 68, 0.18);
-            color: #f87171;
-            border: 1px solid #ef4444;
+            background-color: rgba(244, 63, 94, 0.16);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.35);
         }
         .badge-pass {
-            background-color: rgba(16, 185, 129, 0.18);
-            color: #34d399;
-            border: 1px solid #10b981;
+            background-color: rgba(74, 222, 128, 0.14);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.35);
         }
         .badge-error {
-            background-color: rgba(245, 158, 11, 0.18);
-            color: #fbbf24;
-            border: 1px solid #f59e0b;
+            background-color: rgba(245, 158, 11, 0.16);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.35);
         }
         .badge-na {
-            background-color: rgba(100, 116, 139, 0.2);
-            color: #94a3b8;
-            border: 1px solid #64748b;
+            background-color: rgba(113, 113, 122, 0.2);
+            color: #a1a1aa;
+            border: 1px solid rgba(113, 113, 122, 0.35);
         }
 
         .badge-critical {
-            background-color: rgba(220, 38, 38, 0.25);
-            color: #fca5a5;
-            border: 1px solid #dc2626;
+            background-color: rgba(225, 29, 72, 0.25);
+            color: #fda4af;
+            border: 1px solid #e11d48;
         }
         .badge-high {
-            background-color: rgba(239, 68, 68, 0.2);
-            color: #f87171;
-            border: 1px solid #ef4444;
+            background-color: rgba(244, 63, 94, 0.2);
+            color: #fb7185;
+            border: 1px solid #f43f5e;
         }
         .badge-medium {
             background-color: rgba(245, 158, 11, 0.2);
-            color: #fcd34d;
-            border: 1px solid #f59e0b;
+            color: #fde047;
+            border: 1px solid #eab308;
         }
         .badge-low {
+            background-color: rgba(139, 92, 246, 0.2);
+            color: #c084fc;
+            border: 1px solid #8b5cf6;
+        }
+        .badge-info {
             background-color: rgba(14, 165, 233, 0.2);
             color: #38bdf8;
             border: 1px solid #0ea5e9;
         }
-        .badge-info {
-            background-color: rgba(100, 116, 139, 0.2);
-            color: #cbd5e1;
-            border: 1px solid #64748b;
-        }
 
-        /* Buttons & Inputs */
+        /* Buttons (Nocturn Pill & Solid) */
         button[kind="primary"] {
-            background: linear-gradient(135deg, #0284c7 0%, #00d2ff 100%) !important;
+            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%) !important;
             border: none !important;
-            color: #060b17 !important;
-            font-weight: 700 !important;
-            letter-spacing: 0.05em !important;
-            box-shadow: 0 2px 10px rgba(0, 210, 255, 0.25) !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3) !important;
         }
         button[kind="primary"]:hover {
-            box-shadow: 0 4px 16px rgba(0, 210, 255, 0.45) !important;
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5) !important;
             transform: translateY(-1px);
         }
 
         /* Code Blocks */
         code, pre {
-            border-radius: 8px !important;
-            border: 1px solid rgba(0, 210, 255, 0.15) !important;
+            background: #10111a !important;
+            border-radius: 10px !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
         }
 
-        /* Mobile responsiveness */
+        /* Sidebar Custom Card */
+        .sidebar-promo-card {
+            background: linear-gradient(180deg, #181928 0%, #131422 100%);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 1rem;
+        }
+        .sidebar-promo-title {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+        .sidebar-promo-desc {
+            font-size: 0.74rem;
+            color: #9496a8;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
         @media (max-width: 768px) {
-            .columbus-header-bar {
+            .nocturn-top-bar {
                 flex-direction: column;
-                gap: 12px;
-                text-align: center;
-                padding: 12px 16px;
+                gap: 10px;
+                padding: 12px;
             }
-            .columbus-header-logo {
-                max-height: 38px;
-            }
-            .main .block-container {
-                padding-left: 0.75rem;
-                padding-right: 0.75rem;
+            .nocturn-search-pill {
+                min-width: 100%;
             }
         }
         </style>
@@ -238,23 +293,35 @@ def apply_theme() -> None:
 
 
 def render_header() -> None:
-    """Render the branded Columbus logo header with live audit status badge."""
+    """Render the Nocturn-style top SaaS navigation bar."""
     if LOGO_FILE.exists():
         encoded = base64.b64encode(LOGO_FILE.read_bytes()).decode("utf-8")
-        img_tag = (
-            f'<img src="data:image/png;base64,{encoded}" '
-            f'alt="Columbus" class="columbus-header-logo" />'
+        logo_tag = (
+            f'<img src="data:image/png;base64,{encoded}" height="32" '
+            'style="border-radius: 6px;" alt="Columbus" />'
         )
-        header_html = f"""
-        <div class="columbus-header-bar">
-            {img_tag}
-            <div class="columbus-status-pill">
-                <span class="pulse-indicator"></span>
-                <span>AUDIT ENGINE // READ-ONLY MODE</span>
+    else:
+        logo_tag = '<div class="nocturn-brand-badge">C</div>'
+
+    navbar_html = f"""
+    <div class="nocturn-top-bar">
+        <div class="nocturn-brand-group">
+            {logo_tag}
+            <span class="nocturn-brand-name">Columbus</span>
+        </div>
+        <div class="nocturn-search-pill">
+            <span>🔍</span>
+            <span>Search findings, rules, resources...</span>
+        </div>
+        <div class="nocturn-actions-group">
+            <div class="nocturn-user-pill">
+                <div class="nocturn-user-avatar">LM</div>
+                <span>Lance (Auditor)</span>
             </div>
         </div>
-        """
-        st.markdown(header_html, unsafe_allow_html=True)
+    </div>
+    """
+    st.markdown(navbar_html, unsafe_allow_html=True)
 
 
 def format_status_badge(status: Status) -> str:

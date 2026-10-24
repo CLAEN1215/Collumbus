@@ -1,4 +1,4 @@
-"""Main entry point for the Collumbus Streamlit web dashboard."""
+"""Main entry point for the Columbus Streamlit web dashboard in Nocturn SaaS style."""
 
 from pathlib import Path
 
@@ -26,52 +26,79 @@ def main() -> None:
         initial_sidebar_state="expanded",
     )
 
-    # Apply global responsive stylesheet and component theme
+    # Apply Nocturn SaaS styling
     apply_theme()
 
-    # Sidebar Branding and Quick Actions
+    # Sidebar Branding (Nocturn Style)
     with st.sidebar:
-        if LOGO_PATH.exists():
-            st.image(str(LOGO_PATH), use_container_width=True)
-        else:
-            st.markdown("## 🧭 **Columbus**")
-            st.caption("Read-only AWS Configuration Auditor")
+        # User profile at top of sidebar
+        profile_html = """
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem;">
+            <div style="width: 38px; height: 38px; border-radius: 50%;
+                 background: linear-gradient(135deg, #7c3aed 0%, #38bdf8 100%);
+                 display: flex; align-items: center; justify-content: center;
+                 font-weight: 800; font-size: 0.85rem; color: #ffffff;">LM</div>
+            <div>
+                <div style="font-weight: 700; font-size: 0.92rem; color: #ffffff;">
+                    Lance (BSIT)
+                </div>
+                <div style="font-size: 0.72rem; color: #8e90a6;">auditor@columbus.sec</div>
+            </div>
+        </div>
+        """
+        st.markdown(profile_html, unsafe_allow_html=True)
 
         scan = get_active_scan()
 
-        st.divider()
+        # Workspaces section (like in Nocturn)
+        st.markdown(
+            "<div style='font-size: 0.75rem; font-weight: 700; color: #71717a; "
+            "letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px;'>"
+            "Workspaces</div>",
+            unsafe_allow_html=True,
+        )
+        source_label = "Demo Environment" if scan.source == Source.DEMO else "AWS Live Account"
+        st.markdown(
+            f"<div style='font-size: 0.82rem; color: #d4d4d8; line-height: 1.6;'>"
+            f"&bull; <b>Target:</b> {source_label}<br/>"
+            f"&bull; <b>Account:</b> {scan.account_id}<br/>"
+            f"&bull; <b>Regions:</b> {', '.join(scan.regions)}<br/>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
 
-        st.markdown("### 🎯 Active Audit")
+        st.write("")
 
-        source_label = "Demo (Simulated)" if scan.source == Source.DEMO else "AWS (Live)"
-        st.write(f"**Target Account:** `{scan.account_id}`")
-        st.write(f"**Data Source:** `{source_label}`")
-        st.write(f"**Scan ID:** `{scan.scan_id[:8]}...`")
+        # Cloud Mode Promo Card (like "Upgrade to Growth" in Nocturn)
+        promo_html = """
+        <div class="sidebar-promo-card">
+            <div class="sidebar-promo-title">⚡ AWS Cloud Mode</div>
+            <div class="sidebar-promo-desc">
+                Zero-credential scanning via IMDSv2. Read-only least-privilege security audit.
+            </div>
+        </div>
+        """
+        st.markdown(promo_html, unsafe_allow_html=True)
 
-        if scan.is_complete:
-            st.success("✅ Complete (100% Inspected)")
-        else:
-            st.warning("⚠️ Incomplete (Gaps / Errors)")
-
-        if st.button("🔄 Run New Demo Scan", use_container_width=True, type="primary"):
+        if st.button("🚀 Run New Scan", use_container_width=True, type="primary"):
             with st.spinner("Executing simulated audit..."):
                 new_scan = run_and_save_demo_scan()
             st.success(f"Executed fresh scan `{new_scan.scan_id[:8]}`!")
             st.rerun()
 
         st.divider()
-        st.caption("Columbus Portfolio Project — Lance (BSIT)")
+        st.caption("Columbus Portfolio Project &bull; BSIT Cloud Security")
 
     # Define the 5 Pages
     pages = [
-        st.Page(render_overview, title="Executive Overview", icon="📊", default=True),
-        st.Page(render_findings, title="Findings Explorer", icon="🔍"),
-        st.Page(render_coverage, title="Coverage & Gaps", icon="🛡️"),
-        st.Page(render_history, title="Scan History & Trends", icon="⏱️"),
-        st.Page(render_rules, title="Security Rules Catalog", icon="📋"),
+        st.Page(render_overview, title="Overview", icon="📊", default=True),
+        st.Page(render_findings, title="Findings", icon="🔍"),
+        st.Page(render_coverage, title="Coverage", icon="🛡️"),
+        st.Page(render_history, title="History", icon="⏱️"),
+        st.Page(render_rules, title="Rules", icon="📋"),
     ]
 
-    # Branded top header bar
+    # Branded Nocturn top SaaS navbar
     render_header()
 
     nav = st.navigation(pages)
