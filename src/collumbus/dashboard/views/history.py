@@ -32,6 +32,7 @@ def render_history() -> None:
     with act_col1:
         if st.button("🚀 Run New Demo Scan", type="primary", use_container_width=True):
             new_scan = run_and_save_demo_scan()
+            st.session_state["sidebar_scan_select"] = new_scan.scan_id
             st.success(f"Executed and saved scan `{new_scan.scan_id[:8]}`!")
             st.rerun()
 
@@ -44,6 +45,7 @@ def render_history() -> None:
                 content = uploaded_file.read().decode("utf-8")
                 loaded_scan = Scan.model_validate_json(content)
                 set_active_scan(loaded_scan)
+                st.session_state["sidebar_scan_select"] = loaded_scan.scan_id
                 st.success(f"Loaded external scan `{loaded_scan.scan_id[:8]}` into active view!")
                 st.rerun()
             except ValidationError as exc:
