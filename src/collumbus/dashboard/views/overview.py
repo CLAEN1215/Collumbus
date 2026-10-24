@@ -94,7 +94,7 @@ def render_overview() -> None:
         f'title="Errors: {errors}"></div>'
         f'<div style="width: {pass_pct:.1f}%; background-color: #10b981;" '
         f'title="Passes: {passes}"></div>'
-        f'</div>'
+        f"</div>"
     )
     st.markdown(meter_html, unsafe_allow_html=True)
 

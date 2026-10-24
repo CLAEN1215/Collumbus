@@ -13,54 +13,60 @@ from collumbus.dashboard.views import (
 )
 from collumbus.models import Source
 
-st.set_page_config(
-    page_title="Collumbus — Cloud Configuration Auditor",
-    page_icon="🧭",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
 
-# Apply global responsive stylesheet and component theme
-apply_theme()
+def main() -> None:
+    st.set_page_config(
+        page_title="Collumbus — Cloud Configuration Auditor",
+        page_icon="🧭",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
 
-# Sidebar Branding and Quick Actions
-with st.sidebar:
-    st.markdown("## 🧭 **Collumbus**")
-    st.caption("Read-only AWS Configuration Auditor")
+    # Apply global responsive stylesheet and component theme
+    apply_theme()
 
-    scan = get_active_scan()
+    # Sidebar Branding and Quick Actions
+    with st.sidebar:
+        st.markdown("## 🧭 **Collumbus**")
+        st.caption("Read-only AWS Configuration Auditor")
 
-    st.divider()
+        scan = get_active_scan()
 
-    st.markdown("### 🎯 Active Audit")
+        st.divider()
 
-    source_label = "Demo (Simulated)" if scan.source == Source.DEMO else "AWS (Live)"
-    st.write(f"**Target Account:** `{scan.account_id}`")
-    st.write(f"**Data Source:** `{source_label}`")
-    st.write(f"**Scan ID:** `{scan.scan_id[:8]}...`")
+        st.markdown("### 🎯 Active Audit")
 
-    if scan.is_complete:
-        st.success("✅ Complete (100% Inspected)")
-    else:
-        st.warning("⚠️ Incomplete (Gaps / Errors)")
+        source_label = "Demo (Simulated)" if scan.source == Source.DEMO else "AWS (Live)"
+        st.write(f"**Target Account:** `{scan.account_id}`")
+        st.write(f"**Data Source:** `{source_label}`")
+        st.write(f"**Scan ID:** `{scan.scan_id[:8]}...`")
 
-    if st.button("🔄 Run New Demo Scan", use_container_width=True, type="primary"):
-        with st.spinner("Executing simulated audit..."):
-            new_scan = run_and_save_demo_scan()
-        st.success(f"Executed fresh scan `{new_scan.scan_id[:8]}`!")
-        st.rerun()
+        if scan.is_complete:
+            st.success("✅ Complete (100% Inspected)")
+        else:
+            st.warning("⚠️ Incomplete (Gaps / Errors)")
 
-    st.divider()
-    st.caption("Collumbus Portfolio Project — Lance (BSIT)")
+        if st.button("🔄 Run New Demo Scan", use_container_width=True, type="primary"):
+            with st.spinner("Executing simulated audit..."):
+                new_scan = run_and_save_demo_scan()
+            st.success(f"Executed fresh scan `{new_scan.scan_id[:8]}`!")
+            st.rerun()
 
-# Define the 5 Pages
-pages = [
-    st.Page(render_overview, title="Executive Overview", icon="📊", default=True),
-    st.Page(render_findings, title="Findings Explorer", icon="🔍"),
-    st.Page(render_coverage, title="Coverage & Gaps", icon="🛡️"),
-    st.Page(render_history, title="Scan History & Trends", icon="⏱️"),
-    st.Page(render_rules, title="Security Rules Catalog", icon="📋"),
-]
+        st.divider()
+        st.caption("Collumbus Portfolio Project — Lance (BSIT)")
 
-nav = st.navigation(pages)
-nav.run()
+    # Define the 5 Pages
+    pages = [
+        st.Page(render_overview, title="Executive Overview", icon="📊", default=True),
+        st.Page(render_findings, title="Findings Explorer", icon="🔍"),
+        st.Page(render_coverage, title="Coverage & Gaps", icon="🛡️"),
+        st.Page(render_history, title="Scan History & Trends", icon="⏱️"),
+        st.Page(render_rules, title="Security Rules Catalog", icon="📋"),
+    ]
+
+    nav = st.navigation(pages)
+    nav.run()
+
+
+if __name__ == "__main__":
+    main()
