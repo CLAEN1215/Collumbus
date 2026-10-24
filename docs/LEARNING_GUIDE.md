@@ -110,3 +110,49 @@ finding. This ensures uninspected areas appear prominently in summaries and repo
 2. Why a rule returns `RuleResult` rather than directly creating a `Finding`.
 3. How `scanner.py` guarantees an incomplete scan when coverage gaps or rule errors occur.
 
+## Phase 3: JSON and CSV Reporting
+
+### What we built
+Comprehensive reporting capabilities: full scan persistence and loss-less deserialization
+via JSON, spreadsheet-ready CSV export with CSV injection defense, and CLI commands for
+generating reports during scans or exporting existing scan files.
+
+### Key files
+| File | Purpose |
+|---|---|
+| `src/collumbus/reporting/json_report.py` | `export_json`, `write_json_report`, and `read_json_report` |
+| `src/collumbus/reporting/csv_report.py` | `export_csv`, `write_csv_report`, and `sanitize_csv_cell` |
+| `src/collumbus/reporting/__init__.py` | Package interface exposing all reporting utilities |
+| `src/collumbus/cli.py` | CLI flags `--json`, `--csv`, `--failures-only`, and `export-csv` command |
+
+### Concepts
+
+**Loss-less round-tripping with Pydantic.** A `Scan` contains complex nested structures
+including datetime objects, enums, coverage gaps, and finding lists. By using Pydantic's
+`model_dump_json()` and `model_validate_json()`, scan reports can be saved to disk and
+reloaded without loss of fidelity. This enables storing audit history and loading historical
+scans in the dashboard (Phase 4).
+
+**Spreadsheet security (CSV Formula Injection).** When spreadsheet software (such as Microsoft
+Excel or LibreOffice Calc) opens a CSV file, cells beginning with `=`, `+`, `-`, `@`, `\t`, or
+`\r` are interpreted as formulas rather than plain text. In malicious or unvetted environments,
+a cloud resource ID or tag (e.g. `=cmd|'/C calc'!A0`) could execute arbitrary system commands
+on an auditor's machine. Collumbus neutralizes this risk by prefixing formula trigger characters
+with a single quote (`'`), instructing spreadsheet software to treat the content as literal text.
+
+**Triage-first sorting.** In audits covering hundreds of resources, burying critical failures
+under hundreds of passes creates operational fatigue. The CSV report sorts findings by
+priority: High and Critical Failures first, followed by Errors, then Passes, and finally
+Not Applicable. Within each status tier, findings are ordered by rule and resource ID.
+
+**Full audit trail vs actionable worklist.** Compliance auditors require proof of every check
+performed, including passes. Operations engineers, on the other hand, only need the items that
+require fixing. Collumbus supports both: full exports by default, and a `--failures-only` flag
+to produce focused remediation worklists.
+
+### Before Phase 4, make sure you understand
+1. Why CSV formula injection is a risk when exporting user-controllable cloud data to spreadsheets.
+2. How `Scan.model_validate_json()` validates reloaded JSON reports against the exact same schema.
+3. How sorting by status and severity aids rapid incident response.
+
+

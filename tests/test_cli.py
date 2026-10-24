@@ -74,3 +74,43 @@ def test_demo_scan_bad_data(tmp_path, capsys):
     bad_data = tmp_path / "missing.json"
     assert main(["demo-scan", "--data", str(bad_data)]) == 2
     assert "cannot read demo file" in capsys.readouterr().err
+
+
+def test_demo_scan_writes_json_and_csv(tmp_path, capsys):
+    json_path = tmp_path / "scan.json"
+    csv_path = tmp_path / "scan.csv"
+    assert main(["demo-scan", "--json", str(json_path), "--csv", str(csv_path)]) == 0
+
+    assert json_path.exists()
+    assert csv_path.exists()
+    out = capsys.readouterr().out
+    assert f"Wrote JSON report to {json_path}" in out
+    assert f"Wrote CSV report to {csv_path}" in out
+
+
+def test_export_csv_stdout(tmp_path, capsys):
+    json_path = tmp_path / "scan.json"
+    assert main(["demo-scan", "--json", str(json_path)]) == 0
+    capsys.readouterr()  # clear buffer
+
+    assert main(["export-csv", str(json_path)]) == 0
+    out = capsys.readouterr().out
+    assert "finding_id,rule_id,title,severity" in out
+
+
+def test_export_csv_to_file(tmp_path, capsys):
+    json_path = tmp_path / "scan.json"
+    csv_path = tmp_path / "exported.csv"
+    assert main(["demo-scan", "--json", str(json_path)]) == 0
+    capsys.readouterr()
+
+    assert main(["export-csv", str(json_path), "-o", str(csv_path), "--failures-only"]) == 0
+    assert csv_path.exists()
+    out = capsys.readouterr().out
+    assert f"Wrote CSV report to {csv_path}" in out
+
+
+def test_export_csv_missing_file_reports_error(tmp_path, capsys):
+    missing_json = tmp_path / "nonexistent.json"
+    assert main(["export-csv", str(missing_json)]) == 2
+    assert "Error: cannot read JSON report" in capsys.readouterr().err

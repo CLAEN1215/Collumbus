@@ -20,6 +20,13 @@ from collumbus.config import DEFAULT_CONFIG_PATH, ConfigError, load_config
 from collumbus.engine import run_scan
 from collumbus.logging_setup import setup_logging
 from collumbus.models import Finding, Scan, Severity, Source, Status
+from collumbus.reporting import (
+    ReportError,
+    export_csv,
+    read_json_report,
+    write_csv_report,
+    write_json_report,
+)
 
 SIMULATED_BANNER = "SIMULATED DATA: fictional demo finding, not a real AWS result."
 SIMULATED_SCAN_BANNER = "SIMULATED DATA: fictional demo resources, not a real AWS account."
@@ -116,6 +123,22 @@ def _cmd_demo_scan(args: argparse.Namespace) -> int:
     scan = run_scan(DemoCollector(args.data), config)
     print(SIMULATED_SCAN_BANNER)
     print(format_scan_summary(scan))
+    if args.json:
+        write_json_report(scan, args.json)
+        print(f"Wrote JSON report to {args.json}")
+    if args.csv:
+        write_csv_report(scan, args.csv, failures_only=args.failures_only)
+        print(f"Wrote CSV report to {args.csv}")
+    return 0
+
+
+def _cmd_export_csv(args: argparse.Namespace) -> int:
+    scan = read_json_report(args.scan_json)
+    if args.output:
+        write_csv_report(scan, args.output, failures_only=args.failures_only)
+        print(f"Wrote CSV report to {args.output}")
+    else:
+        print(export_csv(scan, failures_only=args.failures_only), end="")
     return 0
 
 
@@ -142,7 +165,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_demo.add_argument(
         "--data", type=Path, default=DEFAULT_DEMO_PATH, help="path to demo JSON file"
     )
+    p_demo.add_argument("--json", type=Path, default=None, help="write full scan JSON report")
+    p_demo.add_argument("--csv", type=Path, default=None, help="write findings CSV report")
+    p_demo.add_argument(
+        "--failures-only", action="store_true", help="include only Fail/Error in CSV report"
+    )
     p_demo.set_defaults(func=_cmd_demo_scan)
+
+    p_export = sub.add_parser("export-csv", help="export an existing scan JSON report to CSV")
+    p_export.add_argument("scan_json", type=Path, help="path to scan JSON report")
+    p_export.add_argument("-o", "--output", type=Path, default=None, help="output CSV file path")
+    p_export.add_argument(
+        "--failures-only", action="store_true", help="include only Fail/Error in CSV report"
+    )
+    p_export.set_defaults(func=_cmd_export_csv)
 
     return parser
 
@@ -152,6 +188,6 @@ def main(argv: list[str] | None = None) -> int:
     setup_logging(logging.DEBUG if args.verbose else logging.WARNING)
     try:
         return args.func(args)
-    except (ConfigError, DemoDataError) as exc:
+    except (ConfigError, DemoDataError, ReportError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
