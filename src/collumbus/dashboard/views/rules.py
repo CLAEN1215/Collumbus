@@ -3,10 +3,12 @@
 import streamlit as st
 
 from collumbus.config import DEFAULT_CONFIG_PATH, load_config
+from collumbus.dashboard.theme import apply_theme
 from collumbus.rules import ALL_RULES
 
 
 def render_rules() -> None:
+    apply_theme()
     config = load_config()
 
     st.title("📋 Security Rules & Policy Catalog")
@@ -28,51 +30,53 @@ def render_rules() -> None:
 
         status_chip = "🟢 ENABLED" if is_enabled else "⚪ DISABLED"
 
-        expander_title = f"**{rule_cls.rule_id}**: {rule_cls.title} ({status_chip})"
+        sev_label = active_sev.upper()
+        expander_title = f"{rule_cls.rule_id}: {rule_cls.title} — [{sev_label}] ({status_chip})"
         with st.expander(expander_title, expanded=True):
             col_r1, col_r2, col_r3 = st.columns(3)
             with col_r1:
-                st.write(f"**Rule ID:** `{rule_cls.rule_id}`")
-                st.write(f"**Applies To:** `{', '.join(sorted(rule_cls.resource_types))}`")
+                st.markdown(f"**Rule ID:** `{rule_cls.rule_id}`")
+                st.markdown(f"**Applies To:** `{', '.join(sorted(rule_cls.resource_types))}`")
             with col_r2:
-                st.write(f"**Configured Severity:** `{active_sev}`")
-                st.write(f"**Default Severity:** `{rule_cls.default_severity.value}`")
+                st.markdown(f"**Configured Severity:** `{active_sev}`")
+                st.markdown(f"**Default Severity:** `{rule_cls.default_severity.value}`")
             with col_r3:
-                st.write(f"**Status:** {status_chip}")
+                st.markdown(f"**Status:** {status_chip}")
 
-            st.markdown("**🚨 Security Risk**")
-            st.write(rule_cls.risk)
+            st.markdown("##### 🚨 Security Risk & Threat Model")
+            st.info(rule_cls.risk)
 
-            st.markdown("**🛠️ Remediation**")
-            st.write(rule_cls.remediation)
+            st.markdown("##### 🛠️ Remediation Guidance")
+            st.code(rule_cls.remediation, language="text")
 
             if rule_cls.rule_id == "S3-002":
-                st.markdown("**🔐 Project Policy: Approved Encryption Algorithms**")
+                st.markdown("##### 🔐 Policy: Approved Encryption Algorithms")
                 algos = config.s3_encryption.approved_algorithms
                 st.code(", ".join(algos))
 
             if rule_cls.references:
-                st.markdown("**🔗 References**")
+                st.markdown("##### 🔗 Documentation & Benchmarks")
                 for url in rule_cls.references:
                     st.markdown(f"- [{url}]({url})")
 
     # SYS-001 Documentation
-    with st.expander("**SYS-001**: Audit Coverage Gap / Collection Denial (SYSTEM RULE)"):
-        st.write("**Rule ID:** `SYS-001`")
-        st.write("**Applies To:** `Collumbus::CoverageGap`")
-        st.write("**Configured Severity:** `Informational`")
-        st.write(
+    with st.expander("SYS-001: Audit Coverage Gap / Collection Denial (SYSTEM RULE)"):
+        st.markdown("**Rule ID:** `SYS-001`")
+        st.markdown("**Applies To:** `Collumbus::CoverageGap`")
+        st.markdown("**Configured Severity:** `Informational`")
+        st.markdown(
             "**Risk**: If the scanning identity is denied permission to list resources or read "
             "attributes (such as `AccessDenied` or `Throttling`), misconfigurations in that area "
             "cannot be verified. Collumbus synthesizes a SYS-001 finding so coverage gaps appear "
             "prominently in reports and cannot be mistaken for clean passes."
         )
-        st.write("**Remediation**: Grant the requested IAM read permission and run the scan again.")
+        st.markdown("**Remediation Guidance:**")
+        st.code("Grant the requested IAM read permission and run the scan again.", language="text")
 
     st.divider()
 
     # Active YAML Config File Viewer
-    st.subheader("Active Configuration File")
+    st.subheader("Active Configuration File (`config/rules.yaml`)")
     st.caption(f"Loaded from `{DEFAULT_CONFIG_PATH}`")
     try:
         raw_yaml = DEFAULT_CONFIG_PATH.read_text(encoding="utf-8")

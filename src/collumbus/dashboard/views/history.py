@@ -1,5 +1,6 @@
 """History page: browse past audit runs, compare scans, and track issue lifecycles."""
 
+import altair as alt
 import pandas as pd
 import streamlit as st
 from pydantic import ValidationError
@@ -10,16 +11,18 @@ from collumbus.dashboard.state import (
     run_and_save_demo_scan,
     set_active_scan,
 )
+from collumbus.dashboard.theme import apply_theme
 from collumbus.history import compare_scans
 from collumbus.models import Scan, Status
 from collumbus.validation import format_validation_error
 
 
 def render_history() -> None:
+    apply_theme()
     active_scan = get_active_scan()
     history = get_history()
 
-    st.title("⏱️ Scan History & Comparison")
+    st.title("⏱️ Scan History & Trend Tracking")
     st.caption(
         "Review previous audits, compare posture changes, and track issue resolution over time."
     )
@@ -57,8 +60,44 @@ def render_history() -> None:
         )
         return
 
+    # Posture Trend Over Time (if at least 2 scans)
+    if len(history) >= 2:
+        st.subheader("📈 Security Posture Trend")
+        trend_records = []
+        for s in reversed(history):
+            f_count = sum(1 for f in s.findings if f.status == Status.FAIL)
+            e_count = sum(1 for f in s.findings if f.status == Status.ERROR)
+            trend_records.append(
+                {
+                    "Timestamp": s.started_at.strftime("%m/%d %H:%M"),
+                    "Failures": f_count,
+                    "Errors": e_count,
+                    "Total Findings": len(s.findings),
+                }
+            )
+        trend_df = pd.DataFrame(trend_records)
+        melted = trend_df.melt("Timestamp", var_name="Metric", value_name="Count")
+        trend_chart = (
+            alt.Chart(melted)
+            .mark_line(point=True)
+            .encode(
+                x=alt.X("Timestamp:N", title="Scan Time (UTC)"),
+                y=alt.Y("Count:Q", title="Finding Count"),
+                color=alt.Color(
+                    "Metric:N",
+                    scale=alt.Scale(
+                        domain=["Failures", "Errors", "Total Findings"],
+                        range=["#ef4444", "#f59e0b", "#3b82f6"],
+                    ),
+                ),
+                tooltip=["Timestamp", "Metric", "Count"],
+            )
+            .properties(height=240)
+        )
+        st.altair_chart(trend_chart, use_container_width=True)
+
     # Scan History Table
-    st.subheader("Historical Audits")
+    st.subheader("Historical Audit Records")
     table_data = []
     for s in history:
         fails = sum(1 for f in s.findings if f.status == Status.FAIL)
@@ -78,12 +117,12 @@ def render_history() -> None:
                 "Complete": "Yes" if s.is_complete else "No",
             }
         )
-    st.dataframe(pd.DataFrame(table_data), use_container_width=True)
+    st.dataframe(pd.DataFrame(table_data), use_container_width=True, hide_index=True)
 
     st.divider()
 
     # Scan Comparison Diff Tool
-    st.subheader("Compare Audits (Diff)")
+    st.subheader("Compare Audits (Posture Diff)")
     if len(history) < 2:
         st.info("Record at least two scans to compare changes between audit runs.")
         return
@@ -112,8 +151,12 @@ def render_history() -> None:
         st.info("Select two different scans to see posture changes.")
         return
 
-    baseline_scan = next(s for s in history if s.scan_id == baseline_id)
-    current_scan = next(s for s in history if s.scan_id == current_id)
+    baseline_scan = next((s for s in history if s.scan_id == baseline_id), None)
+    current_scan = next((s for s in history if s.scan_id == current_id), None)
+
+    if not baseline_scan or not current_scan:
+        st.error("Could not find the selected scans.")
+        return
 
     try:
         diff = compare_scans(baseline_scan, current_scan)

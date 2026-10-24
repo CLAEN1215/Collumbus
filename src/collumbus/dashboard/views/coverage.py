@@ -6,9 +6,11 @@ import pandas as pd
 import streamlit as st
 
 from collumbus.dashboard.state import get_active_scan
+from collumbus.dashboard.theme import apply_theme
 
 
 def render_coverage() -> None:
+    apply_theme()
     scan = get_active_scan()
 
     st.title("🛡️ Audit Coverage & Gaps")
@@ -27,12 +29,17 @@ def render_coverage() -> None:
     with c2:
         st.metric("Resources Evaluated", scan.coverage.resources_inspected)
     with c3:
-        st.metric("Coverage Gaps", len(scan.coverage.gaps))
+        st.metric(
+            "Coverage Gaps",
+            len(scan.coverage.gaps),
+            delta=f"{len(scan.coverage.gaps)} gaps" if scan.coverage.gaps else "0 gaps",
+            delta_color="inverse" if scan.coverage.gaps else "off",
+        )
 
     st.divider()
 
     # Coverage Gaps Breakdown
-    st.subheader("Coverage Gaps")
+    st.subheader("Coverage Gaps & Blind Spots")
     if not scan.coverage.gaps:
         st.success(
             "🎉 **Zero Coverage Gaps**: Full read visibility was achieved "
@@ -47,7 +54,7 @@ def render_coverage() -> None:
 
         gaps_data = [
             {
-                "Category": g.category,
+                "Category": g.category.upper(),
                 "Region": g.region,
                 "Resource": g.resource_id or "(all in region)",
                 "Error Code": g.reason,
@@ -56,7 +63,7 @@ def render_coverage() -> None:
             }
             for g in scan.coverage.gaps
         ]
-        st.dataframe(pd.DataFrame(gaps_data), use_container_width=True)
+        st.dataframe(pd.DataFrame(gaps_data), use_container_width=True, hide_index=True)
 
         # IAM Remediation Generator
         missing_perms = sorted(
@@ -84,8 +91,11 @@ def render_coverage() -> None:
     st.divider()
 
     # Inspected Categories
-    st.subheader("Inspected Categories")
+    st.subheader("Inspected Service Categories")
     cat_df = pd.DataFrame(
-        [{"Category": c, "Status": "Inspected"} for c in scan.coverage.inspected_categories]
+        [
+            {"Service Category": c.upper(), "Status": "Inspected", "Coverage": "Verified"}
+            for c in scan.coverage.inspected_categories
+        ]
     )
-    st.table(cat_df)
+    st.dataframe(cat_df, use_container_width=True, hide_index=True)

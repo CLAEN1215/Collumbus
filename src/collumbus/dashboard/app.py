@@ -2,7 +2,13 @@
 
 import streamlit as st
 
-from collumbus.dashboard.state import get_active_scan, run_and_save_demo_scan
+from collumbus.dashboard.state import (
+    get_active_scan,
+    get_history,
+    run_and_save_demo_scan,
+    set_active_scan,
+)
+from collumbus.dashboard.theme import apply_theme
 from collumbus.dashboard.views import (
     render_coverage,
     render_findings,
@@ -19,27 +25,56 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Apply global responsive stylesheet and component theme
+apply_theme()
+
 # Sidebar Branding and Quick Actions
 with st.sidebar:
     st.markdown("## 🧭 **Collumbus**")
     st.caption("Read-only AWS Configuration Auditor")
 
     scan = get_active_scan()
+    history = get_history()
+
     st.divider()
 
-    st.markdown("### Active Audit")
+    st.markdown("### 🎯 Active Audit")
+
+    if len(history) > 1:
+        scan_options = {
+            s.scan_id: (
+                f"{s.started_at.strftime('%m/%d %H:%M')} — {s.source.value} ({s.scan_id[:8]})"
+            )
+            for s in history
+        }
+        keys = list(scan_options.keys())
+        current_idx = keys.index(scan.scan_id) if scan.scan_id in scan_options else 0
+        selected_id = st.selectbox(
+            "Select Scan",
+            options=list(scan_options.keys()),
+            index=current_idx,
+            format_func=lambda x: scan_options[x],
+            label_visibility="collapsed",
+        )
+        if selected_id != scan.scan_id:
+            chosen_scan = next((s for s in history if s.scan_id == selected_id), None)
+            if chosen_scan:
+                set_active_scan(chosen_scan)
+                st.rerun()
+
     source_label = "Demo (Simulated)" if scan.source == Source.DEMO else "AWS (Live)"
     st.write(f"**Target Account:** `{scan.account_id}`")
     st.write(f"**Data Source:** `{source_label}`")
     st.write(f"**Scan ID:** `{scan.scan_id[:8]}...`")
 
     if scan.is_complete:
-        st.success("Complete (100% Inspected)")
+        st.success("✅ Complete (100% Inspected)")
     else:
-        st.warning("Incomplete (Gaps / Errors)")
+        st.warning("⚠️ Incomplete (Gaps / Errors)")
 
-    if st.button("🔄 Refresh Demo Scan", use_container_width=True):
-        new_scan = run_and_save_demo_scan()
+    if st.button("🔄 Run New Demo Scan", use_container_width=True, type="primary"):
+        with st.spinner("Executing simulated audit..."):
+            new_scan = run_and_save_demo_scan()
         st.success(f"Executed fresh scan `{new_scan.scan_id[:8]}`!")
         st.rerun()
 
