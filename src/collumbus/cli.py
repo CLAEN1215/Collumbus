@@ -14,7 +14,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from collumbus import __version__
-from collumbus.collectors import DemoCollector, DemoDataError
+from collumbus.collectors import (
+    AwsCollector,
+    AwsCredentialsError,
+    DemoCollector,
+    DemoDataError,
+)
 from collumbus.collectors.demo import DEFAULT_DEMO_PATH
 from collumbus.config import DEFAULT_CONFIG_PATH, ConfigError, load_config
 from collumbus.engine import run_scan
@@ -30,6 +35,7 @@ from collumbus.reporting import (
 
 SIMULATED_BANNER = "SIMULATED DATA: fictional demo finding, not a real AWS result."
 SIMULATED_SCAN_BANNER = "SIMULATED DATA: fictional demo resources, not a real AWS account."
+AWS_LIVE_UNVERIFIED_BANNER = "AWS LIVE (UNVERIFIED): Read-only AWS scan executed via boto3 SDK."
 
 STATUS_ORDER = [Status.FAIL, Status.ERROR, Status.PASS, Status.NOT_APPLICABLE]
 SEVERITY_ORDER = list(reversed(Severity))  # Critical first
@@ -132,6 +138,22 @@ def _cmd_demo_scan(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_aws_scan(args: argparse.Namespace) -> int:
+    config = load_config(args.config)
+    regions = [r.strip() for r in args.regions.split(",")] if args.regions else None
+    collector = AwsCollector(profile_name=args.profile, regions=regions)
+    scan = run_scan(collector, config)
+    print(AWS_LIVE_UNVERIFIED_BANNER)
+    print(format_scan_summary(scan))
+    if args.json:
+        write_json_report(scan, args.json)
+        print(f"Wrote JSON report to {args.json}")
+    if args.csv:
+        write_csv_report(scan, args.csv, failures_only=args.failures_only)
+        print(f"Wrote CSV report to {args.csv}")
+    return 0
+
+
 def _cmd_export_csv(args: argparse.Namespace) -> int:
     scan = read_json_report(args.scan_json)
     if args.output:
@@ -204,6 +226,24 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_dash.set_defaults(func=_cmd_dashboard)
 
+    p_aws = sub.add_parser(
+        "aws-scan", help="scan live AWS configuration using read-only boto3 calls"
+    )
+    p_aws.add_argument("--profile", type=str, default=None, help="AWS CLI profile name")
+    p_aws.add_argument(
+        "--regions",
+        type=str,
+        default=None,
+        help="comma-separated regions (e.g. us-east-1,eu-west-1)",
+    )
+    p_aws.add_argument("--config", type=Path, default=DEFAULT_CONFIG_PATH)
+    p_aws.add_argument("--json", type=Path, default=None, help="write full scan JSON report")
+    p_aws.add_argument("--csv", type=Path, default=None, help="write findings CSV report")
+    p_aws.add_argument(
+        "--failures-only", action="store_true", help="include only Fail/Error in CSV report"
+    )
+    p_aws.set_defaults(func=_cmd_aws_scan)
+
     return parser
 
 
@@ -212,6 +252,6 @@ def main(argv: list[str] | None = None) -> int:
     setup_logging(logging.DEBUG if args.verbose else logging.WARNING)
     try:
         return args.func(args)
-    except (ConfigError, DemoDataError, ReportError) as exc:
+    except (ConfigError, DemoDataError, ReportError, AwsCredentialsError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2

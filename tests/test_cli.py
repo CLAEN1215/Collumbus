@@ -4,9 +4,11 @@ import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
+from botocore.exceptions import NoCredentialsError
 
 from collumbus import __version__
 from collumbus.cli import SIMULATED_BANNER, build_sample_finding, main
+from collumbus.collectors import AwsCollector, CollectionResult
 from collumbus.models import Finding, Source
 
 
@@ -128,3 +130,37 @@ def test_dashboard_cli_calls_streamlit():
         assert "--server.port" in cmd
         assert "9000" in cmd
         assert "--server.headless=true" in cmd
+
+
+def test_aws_scan_cli_credentials_error(capsys):
+    with patch("boto3.Session") as mock_session_cls:
+        mock_session = MagicMock()
+        mock_sts = MagicMock()
+        mock_sts.get_caller_identity.side_effect = NoCredentialsError()
+        mock_session.client.return_value = mock_sts
+        mock_session_cls.return_value = mock_session
+
+        assert main(["aws-scan"]) == 2
+        assert "Error: AWS credentials not found" in capsys.readouterr().err
+
+
+def test_aws_scan_cli_success(tmp_path, capsys):
+    json_path = tmp_path / "aws_scan.json"
+    csv_path = tmp_path / "aws_scan.csv"
+
+    mock_collection = CollectionResult(
+        source=Source.AWS,
+        account_id="111122223333",
+        regions=["us-east-1"],
+        resource_categories=["s3"],
+        resources=[],
+        gaps=[],
+    )
+
+    with patch.object(AwsCollector, "collect", return_value=mock_collection):
+        assert main(["aws-scan", "--json", str(json_path), "--csv", str(csv_path)]) == 0
+        out = capsys.readouterr().out
+        assert "AWS LIVE (UNVERIFIED)" in out
+        assert "account=111122223333" in out
+        assert json_path.exists()
+        assert csv_path.exists()

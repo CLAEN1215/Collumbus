@@ -1,5 +1,6 @@
 """Collectors gather configuration (demo file or AWS) into one common format."""
 
+from collumbus.collectors.aws import AwsCollector, AwsCredentialsError
 from collumbus.collectors.base import (
     CLOUDTRAIL_REGION,
     CLOUDTRAIL_TRAIL,
@@ -17,6 +18,8 @@ __all__ = [
     "CLOUDTRAIL_TRAIL",
     "IAM_POLICY",
     "S3_BUCKET",
+    "AwsCollector",
+    "AwsCredentialsError",
     "CollectionResult",
     "Collector",
     "DemoCollector",

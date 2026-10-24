@@ -2,9 +2,9 @@
 
 A beginner-friendly, **read-only** AWS cloud configuration auditor written in Python.
 
-> **Status: active development (Phase 4 of 7).** Core audit foundation, demo scanner,
-> security rules, JSON/CSV reporting, and a 5-page Streamlit web dashboard are complete.
-> Not production-ready.
+> **Status: active development (Phase 5 of 7).** Core audit foundation, demo scanner,
+> security rules, JSON/CSV reporting, 5-page Streamlit web dashboard, and read-only AWS
+> boto3 collector are complete. Not production-ready.
 
 ## Scope and limits
 
@@ -24,7 +24,7 @@ the available evidence support. It never changes cloud resources.
 | Demo scanner + checks S3-001, S3-002, IAM-001, CT-001 | Implemented |
 | JSON / CSV reports & CSV injection defense | Implemented |
 | Streamlit dashboard (5 pages) and scan history | Implemented |
-| Read-only AWS scanning via boto3 | Planned (Phase 5) |
+| Read-only AWS scanning via boto3 | Implemented |
 
 ## Quick start (Windows PowerShell)
 

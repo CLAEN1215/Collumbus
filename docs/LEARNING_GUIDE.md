@@ -201,5 +201,53 @@ The 5-page layout serves all three stakeholders in one application.
 2. How the dashboard surfaces coverage gaps as security concerns rather than passing grades.
 3. Why the audit tool generates minimal read-only IAM policies rather than modifying cloud state.
 
+## Phase 5: Read-Only AWS Boto3 Collector
+
+### What we built
+Live cloud configuration collection using the official AWS SDK (`boto3`):
+
+### Key files
+| File | Purpose |
+|---|---|
+| `src/collumbus/collectors/aws.py` | `AwsCollector` performs read-only inspection for S3, IAM, and CloudTrail |
+| `src/collumbus/collectors/__init__.py` | Exported `AwsCollector` and `AwsCredentialsError` |
+| `src/collumbus/cli.py` | Added `aws-scan` command with region, profile, and export options |
+| `tests/test_aws_collector.py` | Unit tests for AWS authentication, parsing, and error simulation |
+
+### Concepts
+
+**The standard AWS credential chain.** Rather than asking users for API secrets or storing
+tokens in configuration files, Collumbus delegates authentication to `boto3.Session`. The SDK
+automatically resolves credentials in order: environment variables (`AWS_ACCESS_KEY_ID`,
+`AWS_SECRET_ACCESS_KEY`), credentials file (`~/.aws/credentials`), config profiles
+(`~/.aws/config`), and container/instance IAM roles. If credentials are missing, it provides
+actionable setup instructions (`aws configure`).
+
+**Zero-modification (read-only) guarantee.** The auditor only calls read-only APIs:
+`sts:GetCallerIdentity`, `s3:ListAllMyBuckets`, `s3:GetBucketLocation`, `s3:GetBucketPublicAccessBlock`,
+`s3:GetEncryptionConfiguration`, `iam:ListPolicies`, `iam:GetPolicyVersion`,
+`cloudtrail:DescribeTrails`, and `cloudtrail:GetTrailStatus`. It never creates, updates, or
+deletes any cloud resource.
+
+**Known state vs API failure in boto3.** In AWS APIs, certain "errors" represent known states
+rather than failures:
+* `NoSuchPublicAccessBlockConfiguration` means Block Public Access is simply turned off. Collumbus
+  records `public_access_block: None`, which the rule properly evaluates as `FAIL`.
+* `ServerSideEncryptionConfigurationNotFoundError` means default encryption is not set. Collumbus
+  records `encryption_rules: None`, which evaluates as `FAIL`.
+* In contrast, `AccessDenied` or `Throttling` means the state could not be determined. Collumbus
+  records a `FetchError`, which produces an `ERROR` finding and notes an incomplete scan.
+
+**Shared evaluation pipeline.** Because `AwsCollector` and `DemoCollector` both emit standardized
+`Resource` objects inside a `CollectionResult`, the four security rules, the severity engine,
+the reporting modules, and the Streamlit dashboard all run against real AWS data with zero
+modifications.
+
+### Before Phase 6, make sure you understand
+1. How `boto3.Session` resolves credentials through the standard credential chain.
+2. The difference between a resource missing a configuration (`None`) vs an API call failing (`FetchError`).
+3. Why `AwsCollector` and `DemoCollector` produce identical `CollectionResult` schemas.
+
+
 
 
