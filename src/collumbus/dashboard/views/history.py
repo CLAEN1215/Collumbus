@@ -1,14 +1,4 @@
-"""History page: browse past audit runs, compare scans, and track issue lifecycles.
-
-Built using the 7 Principles of Design:
-1. Contrast - High-visibility metrics for new vs resolved security issues.
-2. Hierarchy - Top audit actions, posture trend visualization, history log, then posture diff.
-3. Alignment - Symmetrical baseline vs target scan comparison columns.
-4. Balance - Balanced delta metrics (New, Resolved, Recurring) with color coding.
-5. Proximity - Scan selectors placed directly above the diff analysis they control.
-6. Repetition - Consistent date formatting, finding badges, and card styling.
-7. White Space - Uncluttered layout with progressive disclosure for deep finding diffs.
-"""
+"""History page: browse past audit runs, compare scans, and track issue lifecycles."""
 
 import pandas as pd
 import streamlit as st
@@ -31,27 +21,47 @@ def render_history() -> None:
     active_scan = get_active_scan()
     history = get_history()
 
-    st.title("⏱️ Audit History & Posture Trends")
-    st.caption(
-        "Track cloud security posture over time, evaluate resolved issues, "
-        "and compare audit baselines."
+    # 1. Nocturn Page Header
+    st.markdown(
+        "<h1 style='font-size: 2.3rem; font-weight: 800; color: #ffffff; "
+        "margin-bottom: 2px;'>History</h1>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<p style='color: #8e90a6; font-size: 0.95rem; margin-bottom: 1.5rem;'>"
+        "Audit timeline & posture progression &bull; "
+        "Track resolved issues and compare configuration baselines.</p>",
+        unsafe_allow_html=True,
     )
 
-    # 1. Action Toolbar: Run New Scan or Upload External Scan (Alignment & Balance)
-    with st.container(border=True):
-        col_act1, col_act2 = st.columns([1, 2])
-        with col_act1:
-            st.markdown("#### 🚀 Trigger Audit")
-            if st.button("Run Fresh Demo Scan", type="primary", use_container_width=True):
-                with st.spinner("Executing simulated cloud audit..."):
+    # 2. Action Toolbar: Trigger or Import (Balanced 2-Card Row)
+    act_col1, act_col2 = st.columns(2)
+    with act_col1:
+        with st.container(border=True):
+            st.markdown(
+                "<div style='font-size: 0.95rem; font-weight: 700; color: #ffffff; "
+                "margin-bottom: 4px;'>Trigger Audit</div>"
+                "<div style='font-size: 0.78rem; color: #8e90a6; margin-bottom: 12px;'>"
+                "Execute a fresh configuration audit against the active scope.</div>",
+                unsafe_allow_html=True,
+            )
+            if st.button("Run Fresh Scan", type="primary", use_container_width=True):
+                with st.spinner("Executing audit..."):
                     new_scan = run_and_save_demo_scan()
                 st.success(f"Executed and saved scan `{new_scan.scan_id[:8]}`!")
                 st.rerun()
 
-        with col_act2:
-            st.markdown("#### 📂 Import Scan Report")
+    with act_col2:
+        with st.container(border=True):
+            st.markdown(
+                "<div style='font-size: 0.95rem; font-weight: 700; color: #ffffff; "
+                "margin-bottom: 4px;'>Import External Scan</div>"
+                "<div style='font-size: 0.78rem; color: #8e90a6; margin-bottom: 6px;'>"
+                "Upload a previously exported JSON audit report.</div>",
+                unsafe_allow_html=True,
+            )
             uploaded_file = st.file_uploader(
-                "Upload External Scan JSON",
+                "Upload JSON",
                 type=["json"],
                 label_visibility="collapsed",
             )
@@ -70,43 +80,51 @@ def render_history() -> None:
                 except Exception as exc:
                     st.error(f"Failed to read file: {exc}")
 
-    st.divider()
+    st.write("")
 
     if not history:
-        st.info(
-            "No scan history recorded yet. Click 'Run Fresh Demo Scan' above "
-            "to create your first audit record."
-        )
+        st.info("No scan history recorded yet.")
         return
 
-    # 2. Posture Trend Over Time (Hierarchy & Visual Flow)
+    # 3. Posture Trend Line Chart
     if len(history) >= 2:
-        st.subheader("📈 Security Posture Trend")
-        st.caption("Tracking failures, gaps, and passing controls across consecutive audit runs.")
-
-        trend_records = []
-        for s in reversed(history):
-            f_count = sum(1 for f in s.findings if f.status == Status.FAIL)
-            e_count = sum(1 for f in s.findings if f.status == Status.ERROR)
-            p_count = sum(1 for f in s.findings if f.status == Status.PASS)
-            trend_records.append(
-                {
-                    "Timestamp": s.started_at.strftime("%m/%d %H:%M"),
-                    "Failures": f_count,
-                    "Visibility Gaps": e_count,
-                    "Passes": p_count,
-                }
+        with st.container(border=True):
+            st.markdown(
+                "<div style='font-size: 1.1rem; font-weight: 700; color: #ffffff; "
+                "margin-bottom: 2px;'>Security Posture Trend</div>"
+                "<div style='font-size: 0.8rem; color: #8e90a6; margin-bottom: 1rem;'>"
+                "Tracking failures, visibility gaps, and passing controls over time.</div>",
+                unsafe_allow_html=True,
             )
-        trend_df = pd.DataFrame(trend_records)
-        st.line_chart(
-            trend_df,
-            x="Timestamp",
-            y=["Failures", "Visibility Gaps", "Passes"],
-            color=["#ef4444", "#f59e0b", "#10b981"],
-        )
+            trend_records = []
+            for s in reversed(history):
+                f_count = sum(1 for f in s.findings if f.status == Status.FAIL)
+                e_count = sum(1 for f in s.findings if f.status == Status.ERROR)
+                p_count = sum(1 for f in s.findings if f.status == Status.PASS)
+                trend_records.append(
+                    {
+                        "Timestamp": s.started_at.strftime("%m/%d %H:%M"),
+                        "Failures": f_count,
+                        "Gaps": e_count,
+                        "Passes": p_count,
+                    }
+                )
+            trend_df = pd.DataFrame(trend_records)
+            st.line_chart(
+                trend_df,
+                x="Timestamp",
+                y=["Failures", "Gaps", "Passes"],
+                color=["#fb7185", "#fbbf24", "#8b5cf6"],
+            )
 
-    # 3. Scan History Table (Alignment & Repetition)
-    st.subheader(f"📋 Recorded Audits ({len(history)} total)")
+    st.write("")
+
+    # 4. Scan History Table
+    st.markdown(
+        f"<h3 style='font-size: 1.25rem; font-weight: 700; color: #ffffff; "
+        f"margin-bottom: 4px;'>Recorded Audits ({len(history)} total)</h3>",
+        unsafe_allow_html=True,
+    )
     table_data = []
     for s in history:
         fails = sum(1 for f in s.findings if f.status == Status.FAIL)
@@ -115,11 +133,11 @@ def render_history() -> None:
         is_active = s.scan_id == active_scan.scan_id
         table_data.append(
             {
-                "Status": "👉 ACTIVE" if is_active else "Archived",
+                "Status": "ACTIVE" if is_active else "Archived",
                 "Timestamp (UTC)": s.started_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "Scan ID": s.scan_id[:8],
                 "Source": s.source.value.upper(),
-                "Account ID": s.account_id,
+                "Account": s.account_id,
                 "Inspected": s.coverage.resources_inspected,
                 "Failures": fails,
                 "Gaps": errors,
@@ -128,11 +146,15 @@ def render_history() -> None:
         )
     st.dataframe(pd.DataFrame(table_data), use_container_width=True, hide_index=True)
 
-    st.divider()
+    st.write("")
 
-    # 4. Posture Diff Tool (Proximity, Contrast & Progressive Disclosure)
-    st.subheader("🔍 Compare Audits (Posture Diff)")
-    st.caption("Measure posture changes between any two scans to verify issue remediation.")
+    # 5. Posture Diff Tool
+    st.markdown(
+        "<h3 style='font-size: 1.25rem; font-weight: 700; color: #ffffff; "
+        "margin-bottom: 4px;'>Compare Audits (Posture Diff)</h3>",
+        unsafe_allow_html=True,
+    )
+    st.caption("Measure posture changes between any two scans to verify remediation.")
 
     if len(history) < 2:
         st.info("Record at least two scans to compare changes between audit runs.")
@@ -173,65 +195,64 @@ def render_history() -> None:
     try:
         diff = compare_scans(baseline_scan, current_scan)
 
-        # Delta metrics (Balance & Contrast)
         d1, d2, d3 = st.columns(3)
         with d1:
             st.metric(
-                "New Security Issues",
+                "New security issues",
                 len(diff.new_findings),
                 delta=f"+{len(diff.new_findings)}" if diff.new_findings else "0 new",
                 delta_color="inverse",
             )
         with d2:
             st.metric(
-                "Resolved Issues",
+                "Resolved issues",
                 len(diff.resolved_findings),
-                delta=f"-{len(diff.resolved_findings)}" if diff.resolved_findings else "0 resolved",
+                delta=f"-{len(diff.resolved_findings)}" if diff.resolved_findings else "0",
                 delta_color="normal",
             )
         with d3:
             st.metric(
-                "Recurring / Persisting Issues",
+                "Recurring issues",
                 len(diff.recurring_findings),
                 delta=f"{len(diff.recurring_findings)} persisting",
                 delta_color="off",
             )
 
-        # Detailed change breakdown
         if diff.new_findings:
             with st.expander(
-                f"🚨 New Findings Introduced ({len(diff.new_findings)})",
+                f"New Issues Introduced ({len(diff.new_findings)})",
                 expanded=True,
             ):
                 for f in diff.new_findings:
                     tag = f"[{f.status.value.upper()}] [{f.severity.value}]"
                     st.markdown(
-                        f"- <span style='color: #ef4444; font-weight: bold;'>{tag}</span> "
-                        f"`{f.rule_id}` — **{f.resource_id}**: {f.summary}",
+                        f"- <span style='color: #fb7185; font-weight: bold;'>{tag}</span> "
+                        f"`{f.rule_id}` &bull; **{f.resource_id}**: {f.summary}",
                         unsafe_allow_html=True,
                     )
 
         if diff.resolved_findings:
             with st.expander(
-                f"🎉 Successfully Resolved Findings ({len(diff.resolved_findings)})",
+                f"Resolved Issues ({len(diff.resolved_findings)})",
                 expanded=True,
             ):
                 for f in diff.resolved_findings:
                     st.markdown(
-                        f"- <span style='color: #10b981; font-weight: bold;'>[RESOLVED]</span> "
-                        f"`{f.rule_id}` — **{f.resource_id}**: {f.summary}",
+                        f"- <span style='color: #4ade80; font-weight: bold;'>[RESOLVED]</span> "
+                        f"`{f.rule_id}` &bull; **{f.resource_id}**: {f.summary}",
                         unsafe_allow_html=True,
                     )
 
         if diff.recurring_findings:
             with st.expander(
-                f"🔄 Recurring Unresolved Findings ({len(diff.recurring_findings)})",
+                f"Recurring Unresolved Issues ({len(diff.recurring_findings)})",
                 expanded=False,
             ):
                 for f in diff.recurring_findings:
                     age_str = f.first_detected.strftime("%Y-%m-%d")
                     st.markdown(
-                        f"- `{f.rule_id}` — **{f.resource_id}** (persisting since `{age_str}`)",
+                        f"- `{f.rule_id}` &bull; **{f.resource_id}** "
+                        f"(persisting since `{age_str}`)",
                     )
 
     except ValueError as exc:
