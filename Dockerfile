@@ -16,6 +16,8 @@ COPY pyproject.toml README.md ./
 COPY src/ ./src/
 COPY config/ ./config/
 COPY assets/ ./assets/
+COPY data/ ./data/
+COPY .streamlit/ ./.streamlit/
 COPY app.py ./
 
 # Install dependencies and package
@@ -24,6 +26,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Create a non-root user for security hardening
 RUN useradd -m -u 10001 appuser && \
+    mkdir -p /app/data/history && \
     chown -R appuser:appuser /app
 
 USER appuser
