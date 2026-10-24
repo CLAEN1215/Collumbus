@@ -54,6 +54,27 @@ def run_and_save_aws_scan(
     return scan
 
 
+def run_and_save_content_scan(
+    content: str,
+    name: str = "Uploaded Document",
+    history_dir: Path | None = None,
+) -> Scan:
+    """Run an audit on uploaded or pasted JSON content, save to history, and update state."""
+    from collumbus.collectors import MemoryCollector, parse_input_to_collection
+
+    collection = parse_input_to_collection(content, target_name=name)
+    config = load_config()
+    raw_scan = run_scan(MemoryCollector(collection), config)
+    past_scans = get_history(history_dir)
+    scan = correlate_scan_with_history(raw_scan, past_scans)
+    if history_dir is not None:
+        save_scan_to_history(scan, history_dir)
+    else:
+        save_scan_to_history(scan)
+    st.session_state["active_scan"] = scan
+    return scan
+
+
 def get_active_scan(history_dir: Path | None = None) -> Scan:
     """Return the active scan from session state, or load the latest historical scan,
     or run a demo scan if no history exists yet."""

@@ -12,6 +12,7 @@ from collumbus.dashboard.state import (
 )
 from collumbus.dashboard.theme import apply_theme, render_header
 from collumbus.dashboard.views import (
+    render_audit_file,
     render_coverage,
     render_findings,
     render_history,
@@ -97,10 +98,11 @@ def main() -> None:
         st.divider()
         st.caption("Columbus v0.1.0 &bull; Read-Only Cloud Security Auditor")
 
-    # Define the 5 Pages
+    # Define the Dashboard Pages
     pages = [
         st.Page(render_overview, title="Overview", icon="📊", default=True),
         st.Page(render_findings, title="Findings", icon="🔍"),
+        st.Page(render_audit_file, title="Audit Cloud Files", icon="📁"),
         st.Page(render_coverage, title="Coverage", icon="🛡️"),
         st.Page(render_history, title="History", icon="⏱️"),
         st.Page(render_rules, title="Rules", icon="📋"),

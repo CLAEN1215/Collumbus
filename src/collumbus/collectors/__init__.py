@@ -12,6 +12,11 @@ from collumbus.collectors.base import (
     Resource,
 )
 from collumbus.collectors.demo import DemoCollector, DemoDataError
+from collumbus.collectors.memory import (
+    FileParseError,
+    MemoryCollector,
+    parse_input_to_collection,
+)
 
 __all__ = [
     "CLOUDTRAIL_REGION",
@@ -25,5 +30,8 @@ __all__ = [
     "DemoCollector",
     "DemoDataError",
     "FetchError",
+    "FileParseError",
+    "MemoryCollector",
     "Resource",
+    "parse_input_to_collection",
 ]
